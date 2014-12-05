@@ -100,6 +100,7 @@ public class Test {
 
 
     public static void main() {
+/*
         linux.glibc.put(0);
         linux.glibc.put(int_misc(10, 20));
         linux.glibc.put(int_mul(10, 20));
@@ -111,24 +112,31 @@ public class Test {
         linux.glibc.put(long_mul(6, 12345678L));
         linux.glibc.put(long_div(87654321L, 12345678L));
         linux.glibc.put(long_rem(87654321L, 12345678L));
+*/
 
-        int[] fff = new int[16];
+        int[] arr_int = new int[16];
+        long[] arr_long = new long[16];
+
         for (int i = 0; i < 4; i++) {
-            fff[i] = i * i;
+            arr_int[i] = i * i;
+            arr_long[i] = 1234567890123456789L;
         }
 
 
-        linux.glibc.put(1111111111111111111L);
+
+//        linux.glibc.put(1111111111111111111L);
         for (int i = 0; i < 4; i++) {
-            linux.glibc.put(fff[i]);
+            linux.glibc.put(arr_int[i]);
+            linux.glibc.put(arr_long[i]);
         }
 
-        linux.glibc.put(7777777777777777777L);
+/*        linux.glibc.put(7777777777777777777L);
 
         for (int i = 0; i < 10; i++) {
             linux.glibc.put(int_mul(i, i));
         }
 
+*/
 
     }
 }

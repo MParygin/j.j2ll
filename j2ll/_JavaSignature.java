@@ -45,7 +45,7 @@ public class _JavaSignature {
         StringJoiner joiner = new StringJoiner(", ", this.result + " @" + getID(className, methodName) + "(", ")");
         List<String> pops = new ArrayList<String>();
         for (int i = 0; i < this.args.size(); i++) {
-            pops.add(0, stack.pop());
+            pops.add(0, stack.pop().toString());
         }
         for (int i = 0; i < this.args.size(); i++) {
             String arg = this.args.get(i);

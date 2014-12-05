@@ -19,7 +19,9 @@ public final class Util {
         } else if (str.equals("V")) {
             return "void";
         } else if (str.equals("[I")) {
-            return "[0 x i32]*";
+            return Internals.structireArrayInt();
+        } else if (str.equals("[J")) {
+            return Internals.structireArrayLong();
         }
         return null;
     }

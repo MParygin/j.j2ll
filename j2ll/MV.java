@@ -24,7 +24,7 @@ public class MV extends MethodVisitor{
     // local vars
     Map<Integer, _LocalVar> vars = new HashMap<Integer, _LocalVar>();
     // buffer
-    List<String> out = new ArrayList<String>();
+    IRBuilder out = new IRBuilder();
     // stack
     _Stack stack = new _Stack();
     // labels
@@ -33,7 +33,7 @@ public class MV extends MethodVisitor{
 
     int max_local;
     int max_stack;
-    int tmp = 0;
+    int tmp;
 
     public MV(int i, String methodName, String javaSignature, CV cv) {
         super(i);
@@ -93,93 +93,74 @@ public class MV extends MethodVisitor{
         // todo 0 + 1 (nop + null)
         if (opcode >= Opcodes.ICONST_M1 && opcode <= Opcodes.ICONST_5) { // [2..8]
             int value = opcode - Opcodes.ICONST_0;
-            stack.push(value);
+            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
             out.add("; push " + value);
         } else if (opcode >= Opcodes.LCONST_0 && opcode <= Opcodes.LCONST_1) { // [9..10]
             int value = opcode - Opcodes.LCONST_0;
-            stack.push(value);
+            stack.push(new StackValue(StackValue.TYPE_IMM, (long)value, "i64"));
             out.add("; push " + value);
         } else if (opcode == Opcodes.IALOAD) { // 46
-            String opindex = stack.pop(); String opref = stack.pop(); String value = stack.push();
-            out.add("%__tmp" + tmp + " = getelementptr [0 x i32]* " + opref + ", i32 0, i32 " + opindex); // todo type index
-            out.add(value + " = load i32* %__tmp" + tmp);
-            tmp++;
-        } else if (opcode == Opcodes.IASTORE) { // 79 todo
-            String value = stack.pop(); String opindex = stack.pop(); String opref = stack.pop();
-            out.add("%__tmp" + tmp + " = getelementptr [0 x i32]* " + opref + ", i32 0, i32 " + opindex); // todo type index
-            out.add("store i32 " + value + ", i32* %__tmp" + tmp);
-            tmp++;
+            out.aload(stack, "i32");
+        } else if (opcode == Opcodes.LALOAD) { // 47
+            out.aload(stack, "i64");
+        } else if (opcode == Opcodes.IASTORE) { // 79
+            out.astore(stack, "i32");
+        } else if (opcode == Opcodes.LASTORE) { // 80
+            out.astore(stack, "i64");
         } else if (opcode == Opcodes.IADD) { // 96
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = add i32 " + op1 + ", " + op2);
+            out.in2out1(stack, "add", "i32");
         } else if (opcode == Opcodes.LADD) { // 97
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = add i64 " + op1 + ", " + op2);
+            out.in2out1(stack, "add", "i64");
         } else if (opcode == Opcodes.FADD) { // 98
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fadd float " + op1 + ", " + op2);
+            out.in2out1(stack, "fadd", "float");
         } else if (opcode == Opcodes.DADD) { // 99
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fadd double " + op1 + ", " + op2);
+            out.in2out1(stack, "fadd", "double");
         } else if (opcode == Opcodes.ISUB) { // 100
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = sub i32 " + op1 + ", " + op2);
+            out.in2out1(stack, "sub", "i32");
         } else if (opcode == Opcodes.LSUB) { // 101
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = sub i64 " + op1 + ", " + op2);
+            out.in2out1(stack, "sub", "i64");
         } else if (opcode == Opcodes.FSUB) { // 102
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fsub float " + op1 + ", " + op2);
+            out.in2out1(stack, "fsub", "float");
         } else if (opcode == Opcodes.DSUB) { // 103
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fsub double " + op1 + ", " + op2);
+            out.in2out1(stack, "fsub", "double");
         } else if (opcode == Opcodes.IMUL) { // 104
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = mul i32 " + op1 + ", " + op2);
+            out.in2out1(stack, "mul", "i32");
         } else if (opcode == Opcodes.LMUL) { // 105
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = mul i64 " + op1 + ", " + op2);
+            out.in2out1(stack, "mul", "i64");
         } else if (opcode == Opcodes.FMUL) { // 106
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fmul float " + op1 + ", " + op2);
+            out.in2out1(stack, "fmul", "float");
         } else if (opcode == Opcodes.DMUL) { // 107
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fmul double " + op1 + ", " + op2);
+            out.in2out1(stack, "fmul", "double");
         } else if (opcode == Opcodes.IDIV) { // 108
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = sdiv i32 " + op1 + ", " + op2);
+            out.in2out1(stack, "sdiv", "i32");
         } else if (opcode == Opcodes.LDIV) { // 109
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = sdiv i64 " + op1 + ", " + op2);
+            out.in2out1(stack, "sdiv", "i64");
         } else if (opcode == Opcodes.FDIV) { // 110
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fdiv float " + op1 + ", " + op2);
+            out.in2out1(stack, "fdiv", "float");
         } else if (opcode == Opcodes.DDIV) { // 111
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = fdiv double " + op1 + ", " + op2);
+            out.in2out1(stack, "fdiv", "double");
         } else if (opcode == Opcodes.IREM) { // 112
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = srem i32 " + op1 + ", " + op2);
+            out.in2out1(stack, "srem", "i32");
         } else if (opcode == Opcodes.LREM) { // 113
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = srem i64 " + op1 + ", " + op2);
+            out.in2out1(stack, "srem", "i64");
         } else if (opcode == Opcodes.FREM) { // 114
-            String op2 = stack.pop(); String op1 = stack.pop(); String op3 = stack.push();
-            out.add(op3 + " = frem float " + op1 + ", " + op2);
+            out.in2out1(stack, "frem", "float");
+        } else if (opcode == Opcodes.DREM) { // 115
+            out.in2out1(stack, "frem", "double");
         } else if (opcode == Opcodes.I2S) { // 147
-            String op = stack.pop();
+            StackValue op = stack.pop();
             out.add("i2s " + op);
         } else if (opcode == Opcodes.IRETURN) { // 172
-            String op = stack.pop();
+            StackValue op = stack.pop();
             out.add("ret i32 " + op);
         } else if (opcode == Opcodes.LRETURN) { // 173
-            String op = stack.pop();
+            StackValue op = stack.pop();
             out.add("ret i64 " + op);
         } else if (opcode == Opcodes.FRETURN) { // 174
-            String op = stack.pop();
+            StackValue op = stack.pop();
             out.add("ret float " + op);
         } else if (opcode == Opcodes.DRETURN) { // 175
-            String op = stack.pop();
+            StackValue op = stack.pop();
             out.add("ret double " + op);
         } else if (opcode == Opcodes.RETURN) { // 177
             out.add("ret void");
@@ -191,17 +172,13 @@ public class MV extends MethodVisitor{
     @Override
     public void visitIntInsn(int opcode, int value) {
         if (opcode == Opcodes.BIPUSH) {  // 16
-            stack.push(value);
+            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
             out.add("; push " + value);
         } else if (opcode == Opcodes.SIPUSH) { // 17
-            stack.push(value);
+            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
             out.add("; push " + value);
         } else if (opcode == Opcodes.NEWARRAY) { // 188
-            String op = stack.pop();
-            String res = stack.push();
-            out.add("%__tmp" + tmp + " = call i8* @malloc(i32 " + op + ")");
-            out.add(res + " = bitcast i8* %__tmp" + tmp + " to [0 x i32]*");
-            tmp++;
+            out.newArray(stack, Internals.newJVMArray(value));
         } else {
             System.out.println("INI " + opcode + " " + value);
         }
@@ -211,38 +188,27 @@ public class MV extends MethodVisitor{
     public void visitVarInsn(int opcode, int slot) {
         if (opcode == Opcodes.ILOAD) { // 21
             // copy from local to stack
-            String op = stack.push();
+            String op = stack.push("i32");
             out.add(op + " = load slot-pointer:" + slot);
         } else if (opcode == Opcodes.LLOAD) { // 22
             // copy from local to stack TODO
-            String op = stack.push();
+            String op = stack.push("i64");
             out.add(op + " = load slot-pointer:" + slot);
         } else if (opcode == Opcodes.FLOAD) { // 23
             // copy from local to stack TODO
-            String op = stack.push();
+            String op = stack.push("float");
             out.add(op + " = load slot-pointer:" + slot);
         } else if (opcode == Opcodes.DLOAD) { // 24
             // copy from local to stack TODO
-            String op = stack.push();
+            String op = stack.push("double");
             out.add(op + " = load slot-pointer:" + slot);
         } else if (opcode == Opcodes.ALOAD) { // 25
             // copy from local to stack TODO
-            String op = stack.push();
+            String op = stack.push("slot-type:" + slot);
             out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode == Opcodes.ISTORE) { // 54
-            // copy from stack to local
-            String op = stack.pop();
-            // demo store i32 %tmp, i32* %x.ptr
-            out.add("store i32 " + op + ", slot-pointer:" + slot);
-        } else if (opcode == Opcodes.LSTORE) { // 55 todo
-            // copy from stack to local
-            String op = stack.pop();
-            // demo store i32 %tmp, i32* %x.ptr
-            out.add("store i64 " + op + ", slot-pointer:" + slot);
-        } else if (opcode == Opcodes.ASTORE) { // 58 todo
-            // copy from stack to local
-            String op = stack.pop();
-            out.add("store [0 x i32]* " + op + ", slot-pointer:" + slot);
+        } else if (opcode >= Opcodes.ISTORE && opcode <= Opcodes.ASTORE) { // [54..58] Store stack into local variable
+            StackValue op = stack.pop();
+            out.add("store " + op.fullName() + ", slot-pointer:" + slot);
         } else {
             System.out.println("VVI " + opcode + " " + slot);
         }
@@ -277,7 +243,7 @@ public class MV extends MethodVisitor{
             if ("void".equals(s.getResult())) {
                 out.add("call " + call);
             } else {
-                String op = stack.push();
+                String op = stack.push(s.getResult());
                 out.add(op + " = call " + call);
             }
 
@@ -292,7 +258,7 @@ public class MV extends MethodVisitor{
             if ("void".equals(s.getResult())) {
                 out.add("call " + call);
             } else {
-                String op = stack.push();
+                String op = stack.push(s.getResult());
                 out.add(op + " = call " + call);
             }
 
@@ -321,10 +287,10 @@ public class MV extends MethodVisitor{
             //  %cond = icmp eq i32 %a, %b
             // br i1 %cond, label %IfEqual, label %IfUnequal
             // IfEqual:
-            String op2 = stack.pop();
-            String op1 = stack.pop();
-            out.add("%__tmp" + tmp + " = icmp sge i32 " + op1 + ", " + op2);
-            out.add("br i1 %__tmp" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
+            StackValue op2 = stack.pop();
+            StackValue op1 = stack.pop();
+            out.add("%__tmpc" + tmp + " = icmp sge i32 " + op1 + ", " + op2);
+            out.add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
             out.add("__tmpl" + tmp + ":");
             tmp++;
         } else {
@@ -342,11 +308,11 @@ public class MV extends MethodVisitor{
     public void visitLdcInsn(Object o) {
         if (o instanceof String) {
             // const
-            stack.push(10);
+            stack.push(new StackValue(StackValue.TYPE_IMM, 10, "i32")); // todo
             out.add("VLDC " + o);
         } else if (o instanceof Long) {
             Long value = (Long) o;
-            stack.push(value.longValue());
+            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i64"));
             out.add("; push " + value);
         }
     }
@@ -441,7 +407,7 @@ public class MV extends MethodVisitor{
             ps.println("    store "+argType+" %s" + i + ", "+argType+"* %" + lv.name); //todo
         }
         // 2) text
-        for (String str : out) {
+        for (String str : out.getStrings()) {
             int p = str.indexOf("slot-pointer");
             if (p != -1) {
                 for (Integer slot : vars.keySet()) {
@@ -451,6 +417,17 @@ public class MV extends MethodVisitor{
                     str = str.replace(s, r);
                 }
             }
+
+            p = str.indexOf("slot-type");
+            if (p != -1) {
+                for (Integer slot : vars.keySet()) {
+                    _LocalVar lv = vars.get(slot);
+                    String s = "slot-type:" + slot;
+                    String r = Util.javaSignature2irType(lv.signature);
+                    str = str.replace(s, r);
+                }
+            }
+
             // label
             p = str.indexOf("label:");
             if (p != -1) {
@@ -475,9 +452,9 @@ public class MV extends MethodVisitor{
                     //%x = load i32* %x.ptr        ; загрузили значение типа i32 по указателю %x.ptr
                     //%tmp = add i32 %x, 5         ; прибавили 5
                     //store i32 %tmp, i32* %x.ptr
-                    ps.println("    %__tmp" + tmp + " = load i32* %" + var.name); tmp++;
-                    ps.println("    %__tmp" + tmp + " = add i32 %__tmp" + (tmp - 1) + ", " + value); tmp++;
-                    ps.println("    store i32 %__tmp" + (tmp - 1) + ", i32* %" + var.name);
+                    ps.println("    %__tmpv" + tmp + " = load i32* %" + var.name); tmp++;
+                    ps.println("    %__tmpv" + tmp + " = add i32 %__tmpv" + (tmp - 1) + ", " + value); tmp++;
+                    ps.println("    store i32 %__tmpv" + (tmp - 1) + ", i32* %" + var.name);
                     continue;
                 }
             }

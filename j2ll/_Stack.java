@@ -7,37 +7,39 @@ public class _Stack {
 
     int ord = 0;
     int[] names = new int[256];
-    long[] imm = new long[256];
-    boolean[] bimm = new boolean[256];
+    StackValue[] imm2 = new StackValue[256];
     int pos = 0;
 
     _Stack() {
 
     }
 
-    public String push() {
+    public String push(String type) {
         int v = ord;
         this.names[pos] = ord;
-        this.imm[pos] = 0;
-        this.bimm[pos] = false;
+        this.imm2[pos] = new StackValue(StackValue.TYPE_REG, v, type);
         ord++;
         pos++;
         return "%stack" + v;
     }
 
-    public void push(long imm) {
-        //int v = ord;
-        this.names[pos] = ord;
-        this.imm[pos] = imm;
-        this.bimm[pos] = true;
-        pos++;
+    public String pushObjRef(String type) {
+        return push(new StackValue(StackValue.TYPE_OBJREF, ord, type));
     }
 
-    public String pop() {
-        if (pos == 0) return "Understack";
+    public String push(StackValue value) {
+        int v = ord;
+        this.names[pos] = ord;
+        this.imm2[pos] = value;
+        ord++;
+        pos++;
+        return "%stack" + v;
+    }
+
+    public StackValue pop() {
+        if (pos == 0) return new StackValue(StackValue.TYPE_IMM, -1, "i32");
         pos--;
-        if (this.bimm[pos]) return Long.toString(this.imm[pos]);
-        return "%stack" + names[pos];
+        return this.imm2[pos];
     }
 
 }
