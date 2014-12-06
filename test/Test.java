@@ -2,6 +2,8 @@ package test;
 
 public class Test {
 
+//    public int ST_INT = 10;
+//    public double ST_DBL = 10.0;
 
     // INT
     public static int int_misc(int a, int b) {
@@ -116,19 +118,29 @@ public class Test {
 
         int[] arr_int = new int[16];
         long[] arr_long = new long[16];
+        float[] arr_float = new float[16];
+        double[] arr_double = new double[16];
 
-        for (int i = 0; i < 4; i++) {
-            arr_int[i] = i * i;
+        for (int i = 0; i < 16; i++) {
+            arr_int[i] = 123456;
             arr_long[i] = 1234567890123456789L;
+            arr_float[i] = 1.25f;
+            arr_double[i] = 12345.6789d;
         }
 
 
 
 //        linux.glibc.put(1111111111111111111L);
-        for (int i = 0; i < 4; i++) {
+
+        for (int i = 0; i < 16; i++) {
             linux.glibc.put(arr_int[i]);
             linux.glibc.put(arr_long[i]);
+            linux.glibc.put((int) arr_float[i]);
+            linux.glibc.put((int) (64.45d * i));
+            linux.glibc.put(1111111111);
+            linux.glibc.put(10000L << i);
         }
+
 
 /*        linux.glibc.put(7777777777777777777L);
 

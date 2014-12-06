@@ -6,8 +6,10 @@ package j2ll;
 public class _Stack {
 
     int ord = 0;
-    int[] names = new int[256];
-    StackValue[] imm2 = new StackValue[256];
+    private final int SIZE = 1024;
+
+    int[] names = new int[SIZE];
+    StackValue[] imm2 = new StackValue[SIZE];
     int pos = 0;
 
     _Stack() {
@@ -25,6 +27,10 @@ public class _Stack {
 
     public String pushObjRef(String type) {
         return push(new StackValue(StackValue.TYPE_OBJREF, ord, type));
+    }
+
+    public String pushImm(Object value, String type) {
+        return push(new StackValue(StackValue.TYPE_IMM, value, type));
     }
 
     public String push(StackValue value) {

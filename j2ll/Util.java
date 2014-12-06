@@ -2,30 +2,36 @@ package j2ll;
 
 import java.util.ArrayList;
 import java.util.List;
+import static j2ll.Internals.*;
 
 public final class Util {
 
     public static String javaSignature2irType(String str) {
-        if (str.equals("I")) {
-            return "i32";
-        } else if (str.equals("J")) {
-            return "i64";
-        } else if (str.equals("F")) {
-            return "float";
-        } else if (str.equals("D")) {
-            return "double";
+        if (str.startsWith("[")) {
+            return Internals.arrayOf(javaSignature2irType(str.substring(1)));
+        }
+
+        if (str.equals("B")) {
+            return BYTE;
         } else if (str.equals("S")) {
-            return "i16";
+            return SHORT;
+        } else if (str.equals("C")) {
+            return CHAR;
+        } else if (str.equals("I")) {
+            return INT;
+        } else if (str.equals("J")) {
+            return LONG;
+        } else if (str.equals("F")) {
+            return FLOAT;
+        } else if (str.equals("D")) {
+            return DOUBLE;
         } else if (str.equals("V")) {
             return "void";
-        } else if (str.equals("[I")) {
-            return Internals.structireArrayInt();
-        } else if (str.equals("[J")) {
-            return Internals.structireArrayLong();
         }
         return null;
     }
 
+    @Deprecated
     public static List<String> javaSignatures2irTypes(String str) {
         List<String> result = new ArrayList<String>();
         for (char $ : str.toCharArray()) {

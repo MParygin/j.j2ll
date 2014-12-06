@@ -4,6 +4,7 @@ import org.objectweb.asm.*;
 
 import java.io.PrintStream;
 import java.util.*;
+import static j2ll.Internals.*;
 
 /**
  */
@@ -90,23 +91,69 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitInsn(int opcode) {
-        // todo 0 + 1 (nop + null)
-        if (opcode >= Opcodes.ICONST_M1 && opcode <= Opcodes.ICONST_5) { // [2..8]
+        if (opcode == Opcodes.NOP) {
+        } else if (opcode == Opcodes.ACONST_NULL) {
+            out.add("const null"); //todo
+        } else if (opcode >= Opcodes.ICONST_M1 && opcode <= Opcodes.ICONST_5) { // [2..8]
             int value = opcode - Opcodes.ICONST_0;
-            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
+            stack.push(new StackValue(StackValue.TYPE_IMM, value, INT));
             out.add("; push " + value);
         } else if (opcode >= Opcodes.LCONST_0 && opcode <= Opcodes.LCONST_1) { // [9..10]
             int value = opcode - Opcodes.LCONST_0;
-            stack.push(new StackValue(StackValue.TYPE_IMM, (long)value, "i64"));
+            stack.push(new StackValue(StackValue.TYPE_IMM, (long)value, LONG));
             out.add("; push " + value);
+        } else if (opcode == Opcodes.DCONST_0) { // 14
+            stack.push(new StackValue(StackValue.TYPE_IMM, 0.0d, DOUBLE));
+            out.add("; push 0.0d");
+        } else if (opcode == Opcodes.DCONST_1) { // 15
+            stack.push(new StackValue(StackValue.TYPE_IMM, 1.0d, DOUBLE));
+            out.add("; push 1.0d");
         } else if (opcode == Opcodes.IALOAD) { // 46
             out.aload(stack, "i32");
         } else if (opcode == Opcodes.LALOAD) { // 47
             out.aload(stack, "i64");
+        } else if (opcode == Opcodes.FALOAD) { // 48
+            out.aload(stack, "float");
+        } else if (opcode == Opcodes.DALOAD) { // 49
+            out.aload(stack, "double");
+
+        } else if (opcode == Opcodes.AALOAD) { // 50
+            out.add("aaload"); //todo pop
+        } else if (opcode == Opcodes.BALOAD) { // 51
+            out.add("baload"); //todo pop
+        } else if (opcode == Opcodes.CALOAD) { // 52
+            out.add("caload"); //todo pop
+
         } else if (opcode == Opcodes.IASTORE) { // 79
             out.astore(stack, "i32");
         } else if (opcode == Opcodes.LASTORE) { // 80
             out.astore(stack, "i64");
+        } else if (opcode == Opcodes.FASTORE) { // 81
+            out.astore(stack, "float");
+        } else if (opcode == Opcodes.DASTORE) { // 82
+            out.astore(stack, "double");
+        } else if (opcode == Opcodes.AASTORE) { // 83
+            out.astore(stack, "s32"); //todo char
+        } else if (opcode == Opcodes.BASTORE) { // 84
+            out.astore(stack, BYTE); //todo char
+        } else if (opcode == Opcodes.CASTORE) { // 85
+            out.astore(stack, CHAR); //todo char
+
+        } else if (opcode == Opcodes.POP) { // 87
+            stack.pop();
+            out.add("pop"); //todo pop
+        } else if (opcode == Opcodes.POP2) { // 88
+            stack.pop();
+            stack.pop();
+            out.add("pop2"); //todo pop2
+        } else if (opcode == Opcodes.DUP) { // 89 todo check ?
+            StackValue op = stack.pop();
+            stack.push(op);
+            stack.push(op);
+        } else if (opcode == Opcodes.DUP2) { // 92 todo check runtime depth ? for long & double
+            StackValue op = stack.pop();
+            stack.push(op);
+            stack.push(op);
         } else if (opcode == Opcodes.IADD) { // 96
             out.in2out1(stack, "add", "i32");
         } else if (opcode == Opcodes.LADD) { // 97
@@ -147,9 +194,85 @@ public class MV extends MethodVisitor{
             out.in2out1(stack, "frem", "float");
         } else if (opcode == Opcodes.DREM) { // 115
             out.in2out1(stack, "frem", "double");
+
+
+            // =============================================== negs ==
+        } else if (opcode == Opcodes.INEG) { // 116
+            out.add("neg"); //todo
+        } else if (opcode == Opcodes.DNEG) { // 119
+            out.add("dneg"); //todo
+
+            // =============================================== shifts ==
+        } else if (opcode == Opcodes.ISHL) { // 120
+            out.in2out1(stack, "shl", INT);
+        } else if (opcode == Opcodes.LSHL) { // 121
+            out.operationto(stack, "sext", LONG); // extend stack to long (!)
+            out.in2out1(stack, "shl", LONG);
+        } else if (opcode == Opcodes.ISHR) { // 122
+            out.in2out1(stack, "ashr", INT);
+        } else if (opcode == Opcodes.LSHR) { // 123
+            out.operationto(stack, "sext", LONG); // extend stack to long (!)
+            out.in2out1(stack, "ashr", LONG);
+        } else if (opcode == Opcodes.IUSHR) { // 124
+            out.add("ushr"); //todo
+
+            // =============================================== bits ==
+        } else if (opcode == Opcodes.IAND) { // 126
+            out.add("and"); //todo
+        } else if (opcode == Opcodes.LAND) { // 127
+            out.add("longand"); //todo
+        } else if (opcode == Opcodes.IOR) { // 128
+            out.add("ior"); //todo
+        } else if (opcode == Opcodes.IXOR) { // 130
+            out.add("ixor"); //todo
+
+
+            // =============================================== converts ==
+        } else if (opcode == Opcodes.I2L) { // 133
+            out.operationto(stack, "sext", "i64");
+        } else if (opcode == Opcodes.I2F) { // 134
+            out.sitofp(stack, "float");
+        } else if (opcode == Opcodes.I2D) { // 135
+            out.sitofp(stack, "double");
+        } else if (opcode == Opcodes.L2I) { // 136
+            out.operationto(stack, "trunc", "i32");
+        } else if (opcode == Opcodes.L2F) { // 137
+            out.sitofp(stack, "float");
+        } else if (opcode == Opcodes.L2D) { // 138
+            out.sitofp(stack, "double");
+        } else if (opcode == Opcodes.F2I) { // 139
+            out.fptosi(stack, INT);
+        } else if (opcode == Opcodes.F2L) { // 140
+            out.fptosi(stack, LONG);
+        } else if (opcode == Opcodes.F2D) { // 141
+            out.operationto(stack, "fpext", "double");
+        } else if (opcode == Opcodes.D2I) { // 142
+            out.fptosi(stack, INT);
+        } else if (opcode == Opcodes.D2L) { // 143
+            out.fptosi(stack, LONG);
+        } else if (opcode == Opcodes.D2F) { // 144
+            out.operationto(stack, "fptrunc", "float");
+
+        } else if (opcode == Opcodes.I2B) { // 145
+            out.operationto(stack, "strunc", BYTE); //todo ?
+        } else if (opcode == Opcodes.I2C) { // 146
+            out.operationto(stack, "utrunc", CHAR); //todo ? strunc ?
+            // todo
         } else if (opcode == Opcodes.I2S) { // 147
             StackValue op = stack.pop();
             out.add("i2s " + op);
+            // =============================================== compares ==
+        } else if (opcode == Opcodes.LCMP) { // 148
+            StackValue op = stack.pop();
+            out.add("lcmp " + op); //todo
+        } else if (opcode == Opcodes.DCMPL) { // 151
+            StackValue op = stack.pop();
+            StackValue op2 = stack.pop();
+            String op3 = stack.push("i32");
+            out.add("dcmpl " + op); //todo
+
+
+            // =============================================== returns ==
         } else if (opcode == Opcodes.IRETURN) { // 172
             StackValue op = stack.pop();
             out.add("ret i32 " + op);
@@ -162,8 +285,22 @@ public class MV extends MethodVisitor{
         } else if (opcode == Opcodes.DRETURN) { // 175
             StackValue op = stack.pop();
             out.add("ret double " + op);
+        } else if (opcode == Opcodes.ARETURN) { // 176
+            StackValue op = stack.pop();
+            out.add("ret A " + op); //todo
         } else if (opcode == Opcodes.RETURN) { // 177
             out.add("ret void");
+
+
+
+        } else if (opcode == Opcodes.ARRAYLENGTH) { // 190
+            out.add("arraylength");
+        } else if (opcode == Opcodes.ATHROW) { // 191
+            out.add("athrow");
+        } else if (opcode == Opcodes.MONITORENTER) { // 194
+            out.add("monitorenter");
+        } else if (opcode == Opcodes.MONITOREXIT) { // 195
+            out.add("monitorexit");
         } else {
             System.out.println("IN " + opcode);
         }
@@ -215,14 +352,28 @@ public class MV extends MethodVisitor{
     }
 
     @Override
-    public void visitTypeInsn(int i, String s) {
-        System.out.println("VTI " + i + " " + s);
+    public void visitTypeInsn(int opcode, String s) {
+        if (opcode == Opcodes.NEW) { // 187
+            out.add("new " + s);
+        } else if (opcode == Opcodes.ANEWARRAY) { // 189
+            out.add("new array " + s);
+        } else if (opcode == Opcodes.CHECKCAST) { // 192
+            out.add("checkcast " + s);
+        } else if (opcode == Opcodes.INSTANCEOF) { // 193
+            out.add("instanceof " + s);
+        } else {
+            System.out.println("VTI " + opcode + " " + s);
+        }
     }
 
     @Override
     public void visitFieldInsn(int opcode, String s, String s1, String s2) {
-        if (opcode == Opcodes.PUTSTATIC) { // 179 todo
+        if (opcode == Opcodes.GETSTATIC) { // 178 todo
+            out.add("getstatic " + s + " " + s1 + " " + s2);
+        } else if (opcode == Opcodes.PUTSTATIC) { // 179 todo
             out.add("putstatic " + s + " " + s1 + " " + s2);
+        } else if (opcode == Opcodes.GETFIELD) { // 180 todo
+            out.add("getfield " + s + " " + s1 + " " + s2);
         } else if (opcode == Opcodes.PUTFIELD) { // 181 todo
             out.add("putfield " + s + " " + s1 + " " + s2);
         } else {
@@ -231,8 +382,8 @@ public class MV extends MethodVisitor{
     }
 
     @Override
-    public void visitMethodInsn(int i, String s, String s1, String s2) {
-        System.out.println("VMI " + i + " " + s);
+    public void visitMethodInsn(int opcode, String s, String s1, String s2) {
+        System.out.println("VMI old " + opcode + " " + s);
     }
 
     @Override
@@ -267,6 +418,36 @@ public class MV extends MethodVisitor{
                 this.cv.declares.add(s.getSignatureDeclare(className, methodName));
             }
 
+        } else if (opcode == Opcodes.INVOKEVIRTUAL) { // 182
+            _JavaSignature s = new _JavaSignature(signature);
+            String call = s.getSignatureCall(className, methodName, this.stack);
+            if ("void".equals(s.getResult())) {
+                out.add("call virt  " + call);
+            } else {
+                String op = stack.push(s.getResult());
+                out.add(op + " = call virt " + call);
+            }
+
+            // declare
+            if (!this.cv.className.equals(className)) {
+                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+            }
+
+        } else if (opcode == Opcodes.INVOKEINTERFACE) { // 185
+            _JavaSignature s = new _JavaSignature(signature);
+            String call = s.getSignatureCall(className, methodName, this.stack);
+            if ("void".equals(s.getResult())) {
+                out.add("call int  " + call);
+            } else {
+                String op = stack.push(s.getResult());
+                out.add(op + " = call int " + call);
+            }
+
+            // declare
+            if (!this.cv.className.equals(className)) {
+                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+            }
+
         } else {
             System.out.println("VMI " + opcode);
         }
@@ -282,17 +463,16 @@ public class MV extends MethodVisitor{
         if (opcode == Opcodes.GOTO) {
             usedLabels.add(label.toString());
             out.add("br label %" + label);
-        } else if (opcode == Opcodes.IF_ICMPGE) {
+        } else if (opcode >= Opcodes.IFEQ && opcode <= Opcodes.IFLE) { // [153..158]
             usedLabels.add(label.toString());
-            //  %cond = icmp eq i32 %a, %b
-            // br i1 %cond, label %IfEqual, label %IfUnequal
-            // IfEqual:
-            StackValue op2 = stack.pop();
-            StackValue op1 = stack.pop();
-            out.add("%__tmpc" + tmp + " = icmp sge i32 " + op1 + ", " + op2);
-            out.add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
-            out.add("__tmpl" + tmp + ":");
-            tmp++;
+            int pos = opcode - Opcodes.IFEQ;
+            String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
+            out.branch0(stack, label, types[pos]);
+        } else if (opcode >= Opcodes.IF_ICMPEQ && opcode <= Opcodes.IF_ICMPLE) { // [159..164]
+            usedLabels.add(label.toString());
+            int pos = opcode - Opcodes.IF_ICMPEQ;
+            String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
+            out.branch(stack, label, types[pos]);
         } else {
             out.add("GOTO " + opcode + " " + label.toString());
         }
@@ -308,12 +488,26 @@ public class MV extends MethodVisitor{
     public void visitLdcInsn(Object o) {
         if (o instanceof String) {
             // const
-            stack.push(new StackValue(StackValue.TYPE_IMM, 10, "i32")); // todo
+            stack.pushImm(10, "i32"); // todo
             out.add("VLDC " + o);
+        } else if (o instanceof Integer) {
+            Integer value = (Integer) o;
+            stack.pushImm(value, INT);
+            out.add("; push " + value);
         } else if (o instanceof Long) {
             Long value = (Long) o;
-            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i64"));
+            stack.pushImm(value, LONG);
             out.add("; push " + value);
+        } else if (o instanceof Float) {
+            Float value = (Float) o;
+            stack.pushImm(value, FLOAT);
+            out.add("; push " + value);
+        } else if (o instanceof Double) {
+            Double value = (Double) o;
+            stack.pushImm(value, DOUBLE);
+            out.add("; push " + value);
+        } else {
+            out.add("; todo add const " + o);
         }
     }
 
@@ -424,6 +618,7 @@ public class MV extends MethodVisitor{
                     _LocalVar lv = vars.get(slot);
                     String s = "slot-type:" + slot;
                     String r = Util.javaSignature2irType(lv.signature);
+                    if (r == null) System.out.println("CF TYPE " + lv.signature);
                     str = str.replace(s, r);
                 }
             }

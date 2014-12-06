@@ -14,8 +14,10 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        String className = "test.Test";
-        //String className = "java.lang.String";
+        String className = "test.Linpack";
+        //String className = "test.Test";
+        //String className = "j2ll.Main";
+
         String out = "test.Test.ll";
         PrintStream ps = new PrintStream(new File("./tmp", out));
         CV cv = new CV(ps);
