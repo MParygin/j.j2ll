@@ -1,5 +1,6 @@
 package j2ll;
 
+import com.sun.org.apache.bcel.internal.generic.FCONST;
 import org.objectweb.asm.*;
 
 import java.io.PrintStream;
@@ -28,9 +29,11 @@ public class MV extends MethodVisitor{
     IRBuilder out = new IRBuilder();
     // stack
     _Stack stack = new _Stack();
+    Stack<String> commands = new Stack<String>();
     // labels
     List<Label> labels = new ArrayList<Label>();
     List<String> usedLabels = new ArrayList<String>();
+
 
     int max_local;
     int max_stack;
@@ -91,293 +94,495 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitInsn(int opcode) {
-        if (opcode == Opcodes.NOP) {
-        } else if (opcode == Opcodes.ACONST_NULL) {
-            out.add("const null"); //todo
-        } else if (opcode >= Opcodes.ICONST_M1 && opcode <= Opcodes.ICONST_5) { // [2..8]
-            int value = opcode - Opcodes.ICONST_0;
-            stack.push(new StackValue(StackValue.TYPE_IMM, value, INT));
-            out.add("; push " + value);
-        } else if (opcode >= Opcodes.LCONST_0 && opcode <= Opcodes.LCONST_1) { // [9..10]
-            int value = opcode - Opcodes.LCONST_0;
-            stack.push(new StackValue(StackValue.TYPE_IMM, (long)value, LONG));
-            out.add("; push " + value);
-        } else if (opcode == Opcodes.DCONST_0) { // 14
-            stack.push(new StackValue(StackValue.TYPE_IMM, 0.0d, DOUBLE));
-            out.add("; push 0.0d");
-        } else if (opcode == Opcodes.DCONST_1) { // 15
-            stack.push(new StackValue(StackValue.TYPE_IMM, 1.0d, DOUBLE));
-            out.add("; push 1.0d");
-        } else if (opcode == Opcodes.IALOAD) { // 46
-            out.aload(stack, "i32");
-        } else if (opcode == Opcodes.LALOAD) { // 47
-            out.aload(stack, "i64");
-        } else if (opcode == Opcodes.FALOAD) { // 48
-            out.aload(stack, "float");
-        } else if (opcode == Opcodes.DALOAD) { // 49
-            out.aload(stack, "double");
-
-        } else if (opcode == Opcodes.AALOAD) { // 50
-            out.add("aaload"); //todo pop
-        } else if (opcode == Opcodes.BALOAD) { // 51
-            out.add("baload"); //todo pop
-        } else if (opcode == Opcodes.CALOAD) { // 52
-            out.add("caload"); //todo pop
-
-        } else if (opcode == Opcodes.IASTORE) { // 79
-            out.astore(stack, "i32");
-        } else if (opcode == Opcodes.LASTORE) { // 80
-            out.astore(stack, "i64");
-        } else if (opcode == Opcodes.FASTORE) { // 81
-            out.astore(stack, "float");
-        } else if (opcode == Opcodes.DASTORE) { // 82
-            out.astore(stack, "double");
-        } else if (opcode == Opcodes.AASTORE) { // 83
-            out.astore(stack, "s32"); //todo char
-        } else if (opcode == Opcodes.BASTORE) { // 84
-            out.astore(stack, BYTE); //todo char
-        } else if (opcode == Opcodes.CASTORE) { // 85
-            out.astore(stack, CHAR); //todo char
-
-        } else if (opcode == Opcodes.POP) { // 87
-            stack.pop();
-            out.add("pop"); //todo pop
-        } else if (opcode == Opcodes.POP2) { // 88
-            stack.pop();
-            stack.pop();
-            out.add("pop2"); //todo pop2
-        } else if (opcode == Opcodes.DUP) { // 89 todo check ?
-            StackValue op = stack.pop();
-            stack.push(op);
-            stack.push(op);
-        } else if (opcode == Opcodes.DUP2) { // 92 todo check runtime depth ? for long & double
-            StackValue op = stack.pop();
-            stack.push(op);
-            stack.push(op);
-        } else if (opcode == Opcodes.IADD) { // 96
-            out.in2out1(stack, "add", "i32");
-        } else if (opcode == Opcodes.LADD) { // 97
-            out.in2out1(stack, "add", "i64");
-        } else if (opcode == Opcodes.FADD) { // 98
-            out.in2out1(stack, "fadd", "float");
-        } else if (opcode == Opcodes.DADD) { // 99
-            out.in2out1(stack, "fadd", "double");
-        } else if (opcode == Opcodes.ISUB) { // 100
-            out.in2out1(stack, "sub", "i32");
-        } else if (opcode == Opcodes.LSUB) { // 101
-            out.in2out1(stack, "sub", "i64");
-        } else if (opcode == Opcodes.FSUB) { // 102
-            out.in2out1(stack, "fsub", "float");
-        } else if (opcode == Opcodes.DSUB) { // 103
-            out.in2out1(stack, "fsub", "double");
-        } else if (opcode == Opcodes.IMUL) { // 104
-            out.in2out1(stack, "mul", "i32");
-        } else if (opcode == Opcodes.LMUL) { // 105
-            out.in2out1(stack, "mul", "i64");
-        } else if (opcode == Opcodes.FMUL) { // 106
-            out.in2out1(stack, "fmul", "float");
-        } else if (opcode == Opcodes.DMUL) { // 107
-            out.in2out1(stack, "fmul", "double");
-        } else if (opcode == Opcodes.IDIV) { // 108
-            out.in2out1(stack, "sdiv", "i32");
-        } else if (opcode == Opcodes.LDIV) { // 109
-            out.in2out1(stack, "sdiv", "i64");
-        } else if (opcode == Opcodes.FDIV) { // 110
-            out.in2out1(stack, "fdiv", "float");
-        } else if (opcode == Opcodes.DDIV) { // 111
-            out.in2out1(stack, "fdiv", "double");
-        } else if (opcode == Opcodes.IREM) { // 112
-            out.in2out1(stack, "srem", "i32");
-        } else if (opcode == Opcodes.LREM) { // 113
-            out.in2out1(stack, "srem", "i64");
-        } else if (opcode == Opcodes.FREM) { // 114
-            out.in2out1(stack, "frem", "float");
-        } else if (opcode == Opcodes.DREM) { // 115
-            out.in2out1(stack, "frem", "double");
-
-
-            // =============================================== negs ==
-        } else if (opcode == Opcodes.INEG) { // 116
-            out.add("neg"); //todo
-        } else if (opcode == Opcodes.DNEG) { // 119
-            out.add("dneg"); //todo
-
-            // =============================================== shifts ==
-        } else if (opcode == Opcodes.ISHL) { // 120
-            out.in2out1(stack, "shl", INT);
-        } else if (opcode == Opcodes.LSHL) { // 121
-            out.operationto(stack, "sext", LONG); // extend stack to long (!)
-            out.in2out1(stack, "shl", LONG);
-        } else if (opcode == Opcodes.ISHR) { // 122
-            out.in2out1(stack, "ashr", INT);
-        } else if (opcode == Opcodes.LSHR) { // 123
-            out.operationto(stack, "sext", LONG); // extend stack to long (!)
-            out.in2out1(stack, "ashr", LONG);
-        } else if (opcode == Opcodes.IUSHR) { // 124
-            out.add("ushr"); //todo
-
-            // =============================================== bits ==
-        } else if (opcode == Opcodes.IAND) { // 126
-            out.add("and"); //todo
-        } else if (opcode == Opcodes.LAND) { // 127
-            out.add("longand"); //todo
-        } else if (opcode == Opcodes.IOR) { // 128
-            out.add("ior"); //todo
-        } else if (opcode == Opcodes.IXOR) { // 130
-            out.add("ixor"); //todo
-
-
+        int value = 0;
+        switch (opcode) {
+            case Opcodes.NOP: // 0
+                break;
+            // =============================================== Constants ==
+            case Opcodes.ACONST_NULL: // 1
+                out.add("const null"); //todo
+                break;
+            case Opcodes.ICONST_M1: // 2
+            case Opcodes.ICONST_0: // 3
+            case Opcodes.ICONST_1: // 4
+            case Opcodes.ICONST_2: // 5
+            case Opcodes.ICONST_3: // 6
+            case Opcodes.ICONST_4: // 7
+            case Opcodes.ICONST_5: // 8
+                value = opcode - Opcodes.ICONST_0;
+                stack.pushImm(value, INT);
+                out.add("; push " + value);
+                break;
+            case Opcodes.LCONST_0: // 9
+            case Opcodes.LCONST_1: // 10
+                value = opcode - Opcodes.LCONST_0;
+                stack.pushImm((long) value, LONG);
+                out.add("; push " + value);
+                break;
+            case Opcodes.FCONST_0: // 11
+            case Opcodes.FCONST_1: // 12
+            case Opcodes.FCONST_2: // 13
+                value = opcode - Opcodes.FCONST_0;
+                stack.pushImm((float)value, FLOAT);
+                out.add("; push " + value);
+                break;
+            case Opcodes.DCONST_0: // 14
+            case Opcodes.DCONST_1: // 15
+                value = opcode - Opcodes.DCONST_0;
+                stack.pushImm((double)value, DOUBLE);
+                out.add("; push " + value);
+                break;
+            // =============================================== Array Load ==
+            case Opcodes.IALOAD: // 46
+                out.aload(stack, INT);
+                break;
+            case Opcodes.LALOAD: // 47
+                out.aload(stack, LONG);
+                break;
+            case Opcodes.FALOAD: // 48
+                out.aload(stack, FLOAT);
+                break;
+            case Opcodes.DALOAD: // 49
+                out.aload(stack, DOUBLE);
+                break;
+            case Opcodes.AALOAD: // 50
+                out.add("aaload"); //todo pop
+                break;
+            case Opcodes.BALOAD: // 51
+                out.add("baload"); //todo pop
+                break;
+            case Opcodes.CALOAD: // 52
+                out.add("caload"); //todo pop
+                break;
+            case Opcodes.SALOAD: // 53
+                out.add("saload"); //todo pop
+                break;
+            // =============================================== Array Store ==
+            case Opcodes.IASTORE: // 79
+                out.astore(stack, INT);
+                break;
+            case Opcodes.LASTORE: // 80
+                out.astore(stack, LONG);
+                break;
+            case Opcodes.FASTORE: // 81
+                out.astore(stack, FLOAT);
+                break;
+            case Opcodes.DASTORE: // 82
+                out.astore(stack, DOUBLE);
+                break;
+            case Opcodes.AASTORE: // 83
+                out.astore(stack, "s32"); // todo array
+                break;
+            case Opcodes.BASTORE: // 84
+                out.astore(stack, BYTE); // todo array
+                break;
+            case Opcodes.CASTORE: // 85
+                out.astore(stack, CHAR); // todo array
+                break;
+            case Opcodes.SASTORE: // 86
+                out.astore(stack, SHORT); // todo array
+                break;
+            // =============================================== Array Store ==
+            case Opcodes.POP: // 87 todo
+                stack.pop();
+                out.add("; pop");
+                break;
+            case Opcodes.POP2: // 88 todo
+                stack.pop();
+                stack.pop();
+                out.add("; pop2");
+                break;
+            case Opcodes.DUP: // 89 todo
+                {
+                    StackValue _op = stack.pop();
+                    stack.push(_op);
+                    stack.push(_op);
+                    out.add("; dup");
+                }
+                break;
+            case Opcodes.DUP_X1: // 90 todo
+                {
+                    StackValue _op1 = stack.pop();
+                    StackValue _op2 = stack.pop();
+                    stack.push(_op1);
+                    stack.push(_op2);
+                    stack.push(_op1);
+                    out.add("; dup x1");
+                }
+                break;
+            case Opcodes.DUP_X2: // 91 todo
+                {
+                    StackValue _op1 = stack.pop();
+                    StackValue _op2 = stack.pop();
+                    StackValue _op3 = stack.pop();
+                    stack.push(_op1);
+                    stack.push(_op3);
+                    stack.push(_op2);
+                    stack.push(_op1);
+                    out.add("; dup x2");
+                }
+                break;
+            case Opcodes.DUP2: // 92 todo
+                {
+                    StackValue op = stack.pop();
+                    stack.push(op);
+                    stack.push(op);
+                }
+                break;
+            case Opcodes.DUP2_X1: // 93 todo
+                {
+                    StackValue _op1 = stack.pop();
+                    StackValue _op2 = stack.pop();
+                    StackValue _op3 = stack.pop();
+                    stack.push(_op2);
+                    stack.push(_op1);
+                    stack.push(_op3);
+                    stack.push(_op2);
+                    stack.push(_op1);
+                }
+                break;
+            case Opcodes.DUP2_X2: // 94 todo
+                {
+                    StackValue _op1 = stack.pop();
+                    StackValue _op2 = stack.pop();
+                    StackValue _op3 = stack.pop();
+                    StackValue _op4 = stack.pop();
+                    stack.push(_op2);
+                    stack.push(_op1);
+                    stack.push(_op4);
+                    stack.push(_op3);
+                    stack.push(_op2);
+                    stack.push(_op1);
+                }
+                break;
+            case Opcodes.SWAP: // 95 (Swap only first class values)
+                {
+                    StackValue _op1 = stack.pop();
+                    StackValue _op2 = stack.pop();
+                    stack.push(_op1);
+                    stack.push(_op2);
+                }
+                break;
+            // =============================================== ADD ==
+            case Opcodes.IADD: // 96
+                out.in2out1(stack, "add", INT);
+                break;
+            case Opcodes.LADD: // 97
+                out.in2out1(stack, "add", LONG);
+                break;
+            case Opcodes.FADD: // 98
+                out.in2out1(stack, "fadd", FLOAT);
+                break;
+            case Opcodes.DADD: // 99
+                out.in2out1(stack, "fadd", DOUBLE);
+                break;
+            // =============================================== SUB ==
+            case Opcodes.ISUB: // 100
+                out.in2out1(stack, "sub", INT);
+                break;
+            case Opcodes.LSUB: // 101
+                out.in2out1(stack, "sub", LONG);
+                break;
+            case Opcodes.FSUB: // 102
+                out.in2out1(stack, "fsub", FLOAT);
+                break;
+            case Opcodes.DSUB: // 103
+                out.in2out1(stack, "fsub", DOUBLE);
+                break;
+            // =============================================== MUL ==
+            case Opcodes.IMUL: // 104
+                out.in2out1(stack, "mul", INT);
+                break;
+            case Opcodes.LMUL: // 105
+                out.in2out1(stack, "mul", LONG);
+                break;
+            case Opcodes.FMUL: // 106
+                out.in2out1(stack, "fmul", FLOAT);
+                break;
+            case Opcodes.DMUL: // 107
+                out.in2out1(stack, "fmul", DOUBLE);
+                break;
+            // =============================================== DIV ==
+            case Opcodes.IDIV: // 108
+                out.in2out1(stack, "sdiv", INT);
+                break;
+            case Opcodes.LDIV: // 109
+                out.in2out1(stack, "sdiv", LONG);
+                break;
+            case Opcodes.FDIV: // 110
+                out.in2out1(stack, "fdiv", FLOAT);
+                break;
+            case Opcodes.DDIV: // 111
+                out.in2out1(stack, "fdiv", DOUBLE);
+                break;
+            // =============================================== REM ==
+            case Opcodes.IREM: // 112
+                out.in2out1(stack, "srem", INT);
+                break;
+            case Opcodes.LREM: // 113
+                out.in2out1(stack, "srem", LONG);
+                break;
+            case Opcodes.FREM: // 114
+                out.in2out1(stack, "frem", FLOAT);
+                break;
+            case Opcodes.DREM: // 115
+                out.in2out1(stack, "frem", DOUBLE);
+                break;
+            // =============================================== NEG ==
+            case Opcodes.INEG: // 116
+                out.add("ineg"); // todo
+                break;
+            case Opcodes.LNEG: // 117
+                out.add("lneg"); // todo
+                break;
+            case Opcodes.FNEG: // 118
+                out.add("fneg"); // todo
+                break;
+            case Opcodes.DNEG: // 119
+                out.add("dneg"); // todo
+                break;
+            // =============================================== SH* ==
+            case Opcodes.ISHL: // 120
+                out.in2out1(stack, "shl", INT);
+                break;
+            case Opcodes.LSHL: // 121
+                out.operationto(stack, "sext", LONG); // extend stack to long (!)
+                out.in2out1(stack, "shl", LONG);
+                break;
+            case Opcodes.ISHR: // 122
+                out.in2out1(stack, "ashr", INT);
+                break;
+            case Opcodes.LSHR: // 123
+                out.operationto(stack, "sext", LONG); // extend stack to long (!)
+                out.in2out1(stack, "ashr", LONG);
+                break;
+            case Opcodes.IUSHR: // 124
+                out.in2out1(stack, "lshr", INT);
+                break;
+            case Opcodes.LUSHR: // 125
+                out.operationto(stack, "sext", LONG); // extend stack to long (!)
+                out.in2out1(stack, "lshr", LONG);
+                break;
+            // =============================================== AND ==
+            case Opcodes.IAND: // 126
+                out.in2out1(stack, "and", INT);
+                break;
+            case Opcodes.LAND: // 127
+                out.in2out1(stack, "and", LONG);
+                break;
+            // =============================================== OR ==
+            case Opcodes.IOR: // 128
+                out.in2out1(stack, "or", INT);
+                break;
+            case Opcodes.LOR: // 129
+                out.in2out1(stack, "or", LONG);
+                break;
+            // =============================================== XOR ==
+            case Opcodes.IXOR: // 130
+                out.in2out1(stack, "xor", INT);
+                break;
+            case Opcodes.LXOR: // 131
+                out.in2out1(stack, "xor", LONG);
+                break;
             // =============================================== converts ==
-        } else if (opcode == Opcodes.I2L) { // 133
-            out.operationto(stack, "sext", "i64");
-        } else if (opcode == Opcodes.I2F) { // 134
-            out.sitofp(stack, "float");
-        } else if (opcode == Opcodes.I2D) { // 135
-            out.sitofp(stack, "double");
-        } else if (opcode == Opcodes.L2I) { // 136
-            out.operationto(stack, "trunc", "i32");
-        } else if (opcode == Opcodes.L2F) { // 137
-            out.sitofp(stack, "float");
-        } else if (opcode == Opcodes.L2D) { // 138
-            out.sitofp(stack, "double");
-        } else if (opcode == Opcodes.F2I) { // 139
-            out.fptosi(stack, INT);
-        } else if (opcode == Opcodes.F2L) { // 140
-            out.fptosi(stack, LONG);
-        } else if (opcode == Opcodes.F2D) { // 141
-            out.operationto(stack, "fpext", "double");
-        } else if (opcode == Opcodes.D2I) { // 142
-            out.fptosi(stack, INT);
-        } else if (opcode == Opcodes.D2L) { // 143
-            out.fptosi(stack, LONG);
-        } else if (opcode == Opcodes.D2F) { // 144
-            out.operationto(stack, "fptrunc", "float");
-
-        } else if (opcode == Opcodes.I2B) { // 145
-            out.operationto(stack, "strunc", BYTE); //todo ?
-        } else if (opcode == Opcodes.I2C) { // 146
-            out.operationto(stack, "utrunc", CHAR); //todo ? strunc ?
-            // todo
-        } else if (opcode == Opcodes.I2S) { // 147
-            StackValue op = stack.pop();
-            out.add("i2s " + op);
-            // =============================================== compares ==
-        } else if (opcode == Opcodes.LCMP) { // 148
-            StackValue op = stack.pop();
-            out.add("lcmp " + op); //todo
-        } else if (opcode == Opcodes.DCMPL) { // 151
-            StackValue op = stack.pop();
-            StackValue op2 = stack.pop();
-            String op3 = stack.push("i32");
-            out.add("dcmpl " + op); //todo
-
-
+            case Opcodes.I2L: // 133
+                out.operationto(stack, "sext", LONG);
+                break;
+            case Opcodes.I2F: // 134
+                out.sitofp(stack, FLOAT);
+                break;
+            case Opcodes.I2D: // 135
+                out.sitofp(stack, DOUBLE);
+                break;
+            case Opcodes.L2I: // 136
+                out.operationto(stack, "trunc", INT);
+                break;
+            case Opcodes.L2F: // 137
+                out.sitofp(stack, FLOAT);
+                break;
+            case Opcodes.L2D: // 138
+                out.sitofp(stack, DOUBLE);
+                break;
+            case Opcodes.F2I: // 139
+                out.fptosi(stack, INT);
+                break;
+            case Opcodes.F2L: // 140
+                out.fptosi(stack, LONG);
+                break;
+            case Opcodes.F2D: // 141
+                out.operationto(stack, "fpext", DOUBLE);
+                break;
+            case Opcodes.D2I: // 142
+                out.fptosi(stack, INT);
+                break;
+            case Opcodes.D2L: // 143
+                out.fptosi(stack, LONG);
+                break;
+            case Opcodes.D2F: // 144
+                out.operationto(stack, "fptrunc", FLOAT);
+                break;
+            case Opcodes.I2B: // 145
+                out.operationto(stack, "strunc", BYTE); //todo ?
+                break;
+            case Opcodes.I2C: // 146
+                out.operationto(stack, "utrunc", CHAR); //todo ? strunc ?
+                break;
+            case Opcodes.I2S: // 147
+                out.operationto(stack, "utrunc", SHORT); //todo ? strunc ?
+                break;
+            // =============================================== Long compares (use with IF* command) ==
+            case Opcodes.LCMP: // 148
+                commands.push("lcmp");
+                break;
+            // =============================================== Float compares (use with IF* command) ==
+            case Opcodes.FCMPL: // 149
+                commands.push("fcmpl");
+                break;
+            case Opcodes.FCMPG: // 150
+                commands.push("fcmpg");
+                break;
+            // =============================================== Double compares (use with IF* command) ==
+            case Opcodes.DCMPL: // 151
+                commands.push("dcmpl");
+                break;
+            case Opcodes.DCMPG: // 152
+                commands.push("dcmpg");
+                break;
             // =============================================== returns ==
-        } else if (opcode == Opcodes.IRETURN) { // 172
-            StackValue op = stack.pop();
-            out.add("ret i32 " + op);
-        } else if (opcode == Opcodes.LRETURN) { // 173
-            StackValue op = stack.pop();
-            out.add("ret i64 " + op);
-        } else if (opcode == Opcodes.FRETURN) { // 174
-            StackValue op = stack.pop();
-            out.add("ret float " + op);
-        } else if (opcode == Opcodes.DRETURN) { // 175
-            StackValue op = stack.pop();
-            out.add("ret double " + op);
-        } else if (opcode == Opcodes.ARETURN) { // 176
-            StackValue op = stack.pop();
-            out.add("ret A " + op); //todo
-        } else if (opcode == Opcodes.RETURN) { // 177
-            out.add("ret void");
+            case Opcodes.IRETURN: // 172
+                out.add("ret i32 " + stack.pop());
+                break;
+            case Opcodes.LRETURN: // 173
+                out.add("ret i64 " + stack.pop());
+                break;
+            case Opcodes.FRETURN: // 174
+                out.add("ret float " + stack.pop());
+                break;
+            case Opcodes.DRETURN: // 175
+                out.add("ret double " + stack.pop());
+                break;
+            case Opcodes.ARETURN: // 176
+                out.add("ret A " + stack.pop()); // todo
+                break;
+            case Opcodes.RETURN: // 177
+                out.add("ret void");
+                break;
+            // =============================================== misc ==
+            case Opcodes.ARRAYLENGTH: // 190
+                out.add("arraylength"); // todo
+                break;
+            case Opcodes.ATHROW: // 191
+                out.add("athrow"); // todo
+                break;
+            case Opcodes.MONITORENTER: // 194
+                out.add("monitorenter");
+                break;
+            case Opcodes.MONITOREXIT: // 195
+                out.add("monitorexit");
+                break;
+
+        }
+
+        if (opcode == Opcodes.NOP) {
 
 
-
-        } else if (opcode == Opcodes.ARRAYLENGTH) { // 190
-            out.add("arraylength");
-        } else if (opcode == Opcodes.ATHROW) { // 191
-            out.add("athrow");
         } else if (opcode == Opcodes.MONITORENTER) { // 194
             out.add("monitorenter");
         } else if (opcode == Opcodes.MONITOREXIT) { // 195
             out.add("monitorexit");
         } else {
-            System.out.println("IN " + opcode);
+            //System.out.println("IN " + opcode);
         }
     }
 
     @Override
     public void visitIntInsn(int opcode, int value) {
-        if (opcode == Opcodes.BIPUSH) {  // 16
-            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
-            out.add("; push " + value);
-        } else if (opcode == Opcodes.SIPUSH) { // 17
-            stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
-            out.add("; push " + value);
-        } else if (opcode == Opcodes.NEWARRAY) { // 188
-            out.newArray(stack, Internals.newJVMArray(value));
-        } else {
-            System.out.println("INI " + opcode + " " + value);
+        switch (opcode) {
+            case Opcodes.BIPUSH: // 16
+                stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
+                out.add("; push " + value);
+                break;
+            case Opcodes.SIPUSH: // 17
+                stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
+                out.add("; push " + value);
+                break;
+            case Opcodes.NEWARRAY: // 188
+                out.newArray(stack, Internals.newJVMArray(value));
+                break;
+            default:
+                System.out.println("INI " + opcode + " " + value);
         }
     }
 
     @Override
     public void visitVarInsn(int opcode, int slot) {
-        if (opcode == Opcodes.ILOAD) { // 21
-            // copy from local to stack
-            String op = stack.push("i32");
-            out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode == Opcodes.LLOAD) { // 22
-            // copy from local to stack TODO
-            String op = stack.push("i64");
-            out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode == Opcodes.FLOAD) { // 23
-            // copy from local to stack TODO
-            String op = stack.push("float");
-            out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode == Opcodes.DLOAD) { // 24
-            // copy from local to stack TODO
-            String op = stack.push("double");
-            out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode == Opcodes.ALOAD) { // 25
-            // copy from local to stack TODO
-            String op = stack.push("slot-type:" + slot);
-            out.add(op + " = load slot-pointer:" + slot);
-        } else if (opcode >= Opcodes.ISTORE && opcode <= Opcodes.ASTORE) { // [54..58] Store stack into local variable
-            StackValue op = stack.pop();
-            out.add("store " + op.fullName() + ", slot-pointer:" + slot);
-        } else {
-            System.out.println("VVI " + opcode + " " + slot);
+        switch (opcode) {
+            // =============================================== Load ==
+            case Opcodes.ILOAD: // 21
+                out.add(stack.push(INT) + " = load slot-pointer:" + slot);
+                break;
+            case Opcodes.LLOAD: // 22
+                out.add(stack.push(LONG) + " = load slot-pointer:" + slot);
+                break;
+            case Opcodes.FLOAD: // 23
+                out.add(stack.push(FLOAT) + " = load slot-pointer:" + slot);
+                break;
+            case Opcodes.DLOAD: // 24
+                out.add(stack.push(DOUBLE) + " = load slot-pointer:" + slot);
+                break;
+            case Opcodes.ALOAD: // 25
+                out.add(stack.push("slot-type:" + slot) + " = load slot-pointer:" + slot);
+                break;
+            // =============================================== Store (Store stack into local variable) ==
+            case Opcodes.ISTORE: // 54
+            case Opcodes.LSTORE: // 55
+            case Opcodes.FSTORE: // 56
+            case Opcodes.DSTORE: // 57
+            case Opcodes.ASTORE: // 58
+                out.add("store " + stack.pop().fullName() + ", slot-pointer:" + slot);
+                break;
+            default:
+                System.out.println("VVI " + opcode + " " + slot);
         }
     }
 
     @Override
     public void visitTypeInsn(int opcode, String s) {
-        if (opcode == Opcodes.NEW) { // 187
-            out.add("new " + s);
-        } else if (opcode == Opcodes.ANEWARRAY) { // 189
-            out.add("new array " + s);
-        } else if (opcode == Opcodes.CHECKCAST) { // 192
-            out.add("checkcast " + s);
-        } else if (opcode == Opcodes.INSTANCEOF) { // 193
-            out.add("instanceof " + s);
-        } else {
-            System.out.println("VTI " + opcode + " " + s);
+        switch (opcode) {
+            case Opcodes.NEW: // 187
+                out.add("new " + s);
+                break;
+            case Opcodes.ANEWARRAY: // 189
+                out.add("a new array " + s);
+                break;
+            case Opcodes.CHECKCAST: // 192
+                out.add("checkcast " + s);
+                break;
+            case Opcodes.INSTANCEOF: // 193
+                out.add("instanceof " + s);
+                break;
+            default:
+                System.out.println("VTI " + opcode + " " + s);
         }
     }
 
     @Override
     public void visitFieldInsn(int opcode, String s, String s1, String s2) {
-        if (opcode == Opcodes.GETSTATIC) { // 178 todo
-            out.add("getstatic " + s + " " + s1 + " " + s2);
-        } else if (opcode == Opcodes.PUTSTATIC) { // 179 todo
-            out.add("putstatic " + s + " " + s1 + " " + s2);
-        } else if (opcode == Opcodes.GETFIELD) { // 180 todo
-            out.add("getfield " + s + " " + s1 + " " + s2);
-        } else if (opcode == Opcodes.PUTFIELD) { // 181 todo
-            out.add("putfield " + s + " " + s1 + " " + s2);
-        } else {
-            System.out.println("VFI " + opcode + " " + s);
+        switch (opcode) {
+            case Opcodes.GETSTATIC: // 178 todo
+                out.add("getstatic " + s + " " + s1 + " " + s2);
+                break;
+            case Opcodes.PUTSTATIC: // 179 todo
+                out.add("putstatic " + s + " " + s1 + " " + s2);
+                break;
+            case Opcodes.GETFIELD: // 180 todo
+                out.add("getfield " + s + " " + s1 + " " + s2);
+                break;
+            case Opcodes.PUTFIELD: // 181 todo
+                out.add("putfield " + s + " " + s1 + " " + s2);
+                break;
+            default:
+                System.out.println("VFI " + opcode + " " + s);
         }
     }
 
@@ -388,68 +593,89 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitMethodInsn(int opcode, String className, String methodName, String signature, boolean b) {
-        if (opcode == Opcodes.INVOKESPECIAL) { // 183 todo
-            _JavaSignature s = new _JavaSignature(signature);
-            String call = s.getSignatureCall(className, methodName, this.stack);
-            if ("void".equals(s.getResult())) {
-                out.add("call " + call);
-            } else {
-                String op = stack.push(s.getResult());
-                out.add(op + " = call " + call);
-            }
-
-            // declare
-            if (!this.cv.className.equals(className)) {
-                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
-            }
-
-        } else if (opcode == Opcodes.INVOKESTATIC) { // 184
-            _JavaSignature s = new _JavaSignature(signature);
-            String call = s.getSignatureCall(className, methodName, this.stack);
-            if ("void".equals(s.getResult())) {
-                out.add("call " + call);
-            } else {
-                String op = stack.push(s.getResult());
-                out.add(op + " = call " + call);
-            }
-
-            // declare
-            if (!this.cv.className.equals(className)) {
-                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
-            }
-
-        } else if (opcode == Opcodes.INVOKEVIRTUAL) { // 182
-            _JavaSignature s = new _JavaSignature(signature);
-            String call = s.getSignatureCall(className, methodName, this.stack);
-            if ("void".equals(s.getResult())) {
-                out.add("call virt  " + call);
-            } else {
-                String op = stack.push(s.getResult());
-                out.add(op + " = call virt " + call);
-            }
-
-            // declare
-            if (!this.cv.className.equals(className)) {
-                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
-            }
-
-        } else if (opcode == Opcodes.INVOKEINTERFACE) { // 185
-            _JavaSignature s = new _JavaSignature(signature);
-            String call = s.getSignatureCall(className, methodName, this.stack);
-            if ("void".equals(s.getResult())) {
-                out.add("call int  " + call);
-            } else {
-                String op = stack.push(s.getResult());
-                out.add(op + " = call int " + call);
-            }
-
-            // declare
-            if (!this.cv.className.equals(className)) {
-                this.cv.declares.add(s.getSignatureDeclare(className, methodName));
-            }
-
-        } else {
-            System.out.println("VMI " + opcode);
+        switch (opcode) {
+            case Opcodes.INVOKEVIRTUAL: // 182
+                {
+                    _JavaSignature s = new _JavaSignature(signature);
+                    String call = s.getSignatureCall(className, methodName, this.stack);
+                    if ("void".equals(s.getResult())) {
+                        out.add("call virt  " + call);
+                    } else {
+                        String op = stack.push(s.getResult());
+                        out.add(op + " = call virt " + call);
+                    }
+                    // declare
+                    if (!this.cv.className.equals(className)) {
+                        this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+                    }
+                }
+                break;
+            case Opcodes.INVOKESPECIAL: // 183
+                {
+                    _JavaSignature s = new _JavaSignature(signature);
+                    String call = s.getSignatureCall(className, methodName, this.stack);
+                    if ("void".equals(s.getResult())) {
+                        out.add("call spe " + call);
+                    } else {
+                        String op = stack.push(s.getResult());
+                        out.add(op + " = call spe " + call);
+                    }
+                    // declare
+                    if (!this.cv.className.equals(className)) {
+                        this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+                    }
+                }
+                break;
+            case Opcodes.INVOKESTATIC: // 184
+                {
+                    _JavaSignature s = new _JavaSignature(signature);
+                    String call = s.getSignatureCall(className, methodName, this.stack);
+                    if ("void".equals(s.getResult())) {
+                        out.add("call " + call);
+                    } else {
+                        String op = stack.push(s.getResult());
+                        out.add(op + " = call " + call);
+                    }
+                    // declare
+                    if (!this.cv.className.equals(className)) {
+                        this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+                    }
+                }
+                break;
+            case Opcodes.INVOKEINTERFACE: // 185
+                {
+                    _JavaSignature s = new _JavaSignature(signature);
+                    String call = s.getSignatureCall(className, methodName, this.stack);
+                    if ("void".equals(s.getResult())) {
+                        out.add("call int " + call);
+                    } else {
+                        String op = stack.push(s.getResult());
+                        out.add(op + " = call int " + call);
+                    }
+                    // declare
+                    if (!this.cv.className.equals(className)) {
+                        this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+                    }
+                }
+                break;
+            case Opcodes.INVOKEDYNAMIC: // 186
+                {
+                    _JavaSignature s = new _JavaSignature(signature);
+                    String call = s.getSignatureCall(className, methodName, this.stack);
+                    if ("void".equals(s.getResult())) {
+                        out.add("call dyn " + call);
+                    } else {
+                        String op = stack.push(s.getResult());
+                        out.add(op + " = call syn " + call);
+                    }
+                    // declare
+                    if (!this.cv.className.equals(className)) {
+                        this.cv.declares.add(s.getSignatureDeclare(className, methodName));
+                    }
+                }
+                break;
+            default:
+                System.out.println("VMI " + opcode);
         }
     }
 
@@ -460,21 +686,55 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitJumpInsn(int opcode, Label label) {
-        if (opcode == Opcodes.GOTO) {
-            usedLabels.add(label.toString());
-            out.add("br label %" + label);
-        } else if (opcode >= Opcodes.IFEQ && opcode <= Opcodes.IFLE) { // [153..158]
-            usedLabels.add(label.toString());
-            int pos = opcode - Opcodes.IFEQ;
-            String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
-            out.branch0(stack, label, types[pos]);
-        } else if (opcode >= Opcodes.IF_ICMPEQ && opcode <= Opcodes.IF_ICMPLE) { // [159..164]
-            usedLabels.add(label.toString());
-            int pos = opcode - Opcodes.IF_ICMPEQ;
-            String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
-            out.branch(stack, label, types[pos]);
-        } else {
-            out.add("GOTO " + opcode + " " + label.toString());
+        String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
+        int pos;
+        switch (opcode) {
+            case Opcodes.IFEQ: // 153
+            case Opcodes.IFNE: // 154
+            case Opcodes.IFLT: // 155
+            case Opcodes.IFGE: // 156
+            case Opcodes.IFGT: // 157
+            case Opcodes.IFLE: // 158
+                // todo commands prefix
+                usedLabels.add(label.toString());
+                pos = opcode - Opcodes.IFEQ;
+                out.branch0(stack, label, types[pos]);
+                break;
+            case Opcodes.IF_ICMPEQ: // 159
+            case Opcodes.IF_ICMPNE: // 160
+            case Opcodes.IF_ICMPLT: // 161
+            case Opcodes.IF_ICMPGE: // 162
+            case Opcodes.IF_ICMPGT: // 163
+            case Opcodes.IF_ICMPLE: // 164
+                // todo commands prefix
+                usedLabels.add(label.toString());
+                pos = opcode - Opcodes.IF_ICMPEQ;
+                out.branch(stack, label, types[pos]);
+                break;
+            case Opcodes.IF_ACMPEQ: // 165
+            case Opcodes.IF_ACMPNE: // 166
+                // todo commands prefix
+                usedLabels.add(label.toString());
+                out.add("acmp*"); // todo
+                break;
+            case Opcodes.GOTO: // 167
+                usedLabels.add(label.toString());
+                out.add("br label %" + label);
+                break;
+            case Opcodes.JSR: // 168
+                out.add("jsr*"); // todo
+                break;
+            case Opcodes.RET: // 169
+                out.add("ret*"); // todo
+                break;
+            case Opcodes.IFNULL: // 198
+                out.add("ifnull*"); //todo
+                break;
+            case Opcodes.IFNONNULL: // 199
+                out.add("ifnotnull*"); //todo
+                break;
+            default:
+                out.add("JMP " + opcode + " " + label.toString());
         }
     }
 
@@ -513,22 +773,22 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitIincInsn(int slot, int value) {
-        out.add("inc:" + slot + ":" + value);
+        out.add("inc:" + slot + ":" + value); // 132
     }
 
     @Override
     public void visitTableSwitchInsn(int i, int i1, Label label, Label... labels) {
-        super.visitTableSwitchInsn(i, i1, label, labels);
+        System.out.println("TS " + i + " " + i1);
     }
 
     @Override
     public void visitLookupSwitchInsn(Label label, int[] ints, Label[] labels) {
-        super.visitLookupSwitchInsn(label, ints, labels);
+        System.out.println("LS " + label + " " + ints);
     }
 
     @Override
     public void visitMultiANewArrayInsn(String s, int i) {
-        super.visitMultiANewArrayInsn(s, i);
+        System.out.println("MNA " + s + " " + i);
     }
 
     @Override
@@ -538,7 +798,7 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitTryCatchBlock(Label label, Label label1, Label label2, String s) {
-        super.visitTryCatchBlock(label, label1, label2, s);
+        System.out.println("TRY CATCH " + label + " " + label1 + " " + s);
     }
 
     @Override
@@ -618,8 +878,11 @@ public class MV extends MethodVisitor{
                     _LocalVar lv = vars.get(slot);
                     String s = "slot-type:" + slot;
                     String r = Util.javaSignature2irType(lv.signature);
-                    if (r == null) System.out.println("CF TYPE " + lv.signature);
-                    str = str.replace(s, r);
+                    if (r == null) {
+                        System.out.println("CF TYPE " + lv.signature);
+                    } else {
+                        str = str.replace(s, r);
+                    }
                 }
             }
 

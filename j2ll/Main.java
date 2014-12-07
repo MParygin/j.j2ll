@@ -14,9 +14,9 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        String className = "test.Linpack";
+        //String className = "test.Linpack";
         //String className = "test.Test";
-        //String className = "j2ll.Main";
+        String className = "j2ll.MV";
 
         String out = "test.Test.ll";
         PrintStream ps = new PrintStream(new File("./tmp", out));

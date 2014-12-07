@@ -121,6 +121,11 @@ public class Test {
         float[] arr_float = new float[16];
         double[] arr_double = new double[16];
 
+        int[][][][][][][][][][][][][][][][] ppp = new int[1][2][5][6][7][8][9][4][5][5][4][4][4][4][4][4];
+        if (ppp != null) {
+            System.out.println("dd");
+        }
+
         for (int i = 0; i < 16; i++) {
             arr_int[i] = 123456;
             arr_long[i] = 1234567890123456789L;
