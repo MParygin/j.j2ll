@@ -1,8 +1,19 @@
 package test;
 
 public class Test {
+    int c;
 
-//    public int ST_INT = 10;
+    public Test() {
+        int a= 10;
+        int b = a * 10;
+        c = b >> 1;
+    }
+
+
+
+
+
+    //    public int ST_INT = 10;
 //    public double ST_DBL = 10.0;
 
     // short
@@ -26,6 +37,10 @@ public class Test {
 
 
     public static void main() {
+
+        Test tt = new Test();
+        linux.glibc.put(tt.c);
+
 /*
         linux.glibc.put(0);
         linux.glibc.put(int_misc(10, 20));

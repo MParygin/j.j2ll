@@ -28,13 +28,24 @@ public class IRBuilder {
         tmp.append(" = ");
         tmp.append(op);
         tmp.append(' ');
-        tmp.append(type);
+        tmp.append(type); // IR of op1 ???
         tmp.append(' ');
         tmp.append(op1);
         tmp.append(", ");
         tmp.append(op2);
         add(tmp.toString());
     }
+
+    public void neg(_Stack stack, String type) {
+        StackValue value = stack.pop();
+        String res = stack.push(type);
+        if (Internals.INT.equals(type) || Internals.LONG.equals(type)) {
+            add(res + " = sub " + value.getIR() + " 0, " + value);
+        } else {
+            add(res + " = fsub " + value.getIR() + " 0.0, " + value);
+        }
+    }
+
 
     public void branch(_Stack stack, Stack<String> commands, Label label, int op) {
         if (commands.size() > 0) {

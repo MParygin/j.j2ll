@@ -330,16 +330,16 @@ public class MV extends MethodVisitor{
                 break;
             // =============================================== NEG ==
             case Opcodes.INEG: // 116
-                out.add("ineg"); // todo
+                out.neg(stack, INT);
                 break;
             case Opcodes.LNEG: // 117
-                out.add("lneg"); // todo
+                out.neg(stack, LONG);
                 break;
             case Opcodes.FNEG: // 118
-                out.add("fneg"); // todo
+                out.neg(stack, FLOAT);
                 break;
             case Opcodes.DNEG: // 119
-                out.add("dneg"); // todo
+                out.neg(stack, DOUBLE);
                 break;
             // =============================================== SH* ==
             case Opcodes.ISHL: // 120
@@ -489,11 +489,11 @@ public class MV extends MethodVisitor{
     public void visitIntInsn(int opcode, int value) {
         switch (opcode) {
             case Opcodes.BIPUSH: // 16
-                stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
+                stack.pushImm(value, INT);
                 out.add("; push " + value);
                 break;
             case Opcodes.SIPUSH: // 17
-                stack.push(new StackValue(StackValue.TYPE_IMM, value, "i32"));
+                stack.pushImm(value, INT);
                 out.add("; push " + value);
                 break;
             case Opcodes.NEWARRAY: // 188

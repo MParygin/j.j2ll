@@ -62,7 +62,7 @@ public class CV extends ClassVisitor {
 
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // skip constructor
-        if ("<init>".equals(name)) return null;
+        //if ("<init>".equals(name)) return null;
         // parse
         MV mv = new MV(Opcodes.ASM5, name, desc, this);
         this.methods.add(mv);
