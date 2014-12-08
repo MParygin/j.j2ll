@@ -19,6 +19,7 @@ public class CV extends ClassVisitor {
     private List<MV> methods = new ArrayList<MV>();
     // shared states
     Set<String> declares = new HashSet<String>();
+    Set<String> classes = new HashSet<String>();
 
 
     public CV(PrintStream ps) {
@@ -80,6 +81,12 @@ public class CV extends ClassVisitor {
             this.ps.println("declare " + name);
         }
         this.ps.println();
+
+        // classes
+        for (String name : classes) {
+            this.ps.println("use " + name);
+        }
+
 
         // out fields
         for (_Field field : staticFields) {

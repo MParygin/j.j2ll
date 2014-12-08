@@ -4,6 +4,7 @@ import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * IR Builder
@@ -35,28 +36,48 @@ public class IRBuilder {
         add(tmp.toString());
     }
 
-    public void branch(_Stack stack, Label label, String op) {
+    public void branch(_Stack stack, Stack<String> commands, Label label, int op) {
+        if (commands.size() > 0) {
+            System.err.println("Unknown prefix: " + commands.pop());
+        }
+
         //  %cond = icmp eq i32 %a, %b
         // br i1 %cond, label %IfEqual, label %IfUnequal
         // IfEqual:
         StackValue op2 = stack.pop();
         StackValue op1 = stack.pop();
-        add("%__tmpc" + tmp + " = icmp " + op + " i32 " + op1 + ", " + op2);
+        add("%__tmpc" + tmp + " = icmp " + IR.ICMP[op] + " i32 " + op1 + ", " + op2);
         add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
         add("__tmpl" + tmp + ":");
         tmp++;
 
     }
 
-    public void branch0(_Stack stack, Label label, String op) {
-        //  %cond = icmp eq i32 %a, 0
-        // br i1 %cond, label %IfEqual, label %IfUnequal
-        // IfEqual:
-        StackValue op1 = stack.pop();
-        add("%__tmpc" + tmp + " = icmp " + op + " i32 " + op1 + ", 0");
-        add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
-        add("__tmpl" + tmp + ":");
-        tmp++;
+    public void branch0(_Stack stack, Stack<String> commands, Label label, int op) {
+        if (commands.size() == 0) {
+            //  %cond = icmp eq i32 %a, 0
+            // br i1 %cond, label %IfEqual, label %IfUnequal
+            // IfEqual:
+            StackValue op1 = stack.pop();
+            add("%__tmpc" + tmp + " = icmp " + IR.ICMP[op] + " i32 " + op1 + ", 0");
+            add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
+            add("__tmpl" + tmp + ":");
+            tmp++;
+        } else {
+            // POP prefix
+            String cmd = commands.pop();
+            if (Prefix.FCMPL.equals(cmd) || Prefix.FCMPG.equals(cmd) || Prefix.DCMPL.equals(cmd) || Prefix.DCMPG.equals(cmd)) {
+                // double compare
+                StackValue value2 = stack.pop();
+                StackValue value1 = stack.pop();
+                add("%__tmpc" + tmp + " = fcmp " + IR.FCMP[op] + " " + value1.fullName() + ", " + value2); // ordered compare
+            } else {
+                System.err.println("Unknown prefix: " + commands.pop());
+            }
+            add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
+            add("__tmpl" + tmp + ":");
+            tmp++;
+        }
     }
 
     public void newArray(_Stack stack, String arrayType) {

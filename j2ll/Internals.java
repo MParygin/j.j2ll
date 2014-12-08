@@ -26,6 +26,8 @@ public class Internals {
 
     public static String newJVMArray(int type) {
         switch (type) {
+            case 4: return structireArrayFloat();
+            case 5: return structireArrayChar();
             case 6: return structireArrayFloat();
             case 7: return structireArrayDouble();
             case 8: return structireArrayByte();
@@ -40,32 +42,41 @@ public class Internals {
         return "{i32, [0 x " + type + "]}*";
     }
 
+    @Deprecated
     public static String structireArrayByte() {
         return "{i32, [0 x i8]}*";
     }
 
+    @Deprecated
     public static String structireArrayShort() {
         return "{i32, [0 x i16]}*";
     }
 
+    @Deprecated
     public static String structireArrayChar() {
         return "{i32, [0 x i16]}*";
     }
 
+    @Deprecated
     public static String structireArrayInt() {
         return "{i32, [0 x i32]}*";
     }
 
+    @Deprecated
     public static String structireArrayLong() {
         return "{i32, [0 x i64]}*";
     }
 
+    @Deprecated
     public static String structireArrayFloat() {
         return "{i32, [0 x float]}*";
     }
 
+    @Deprecated
     public static String structireArrayDouble() {
         return "{i32, [0 x double]}*";
     }
+
+
 
 }

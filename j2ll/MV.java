@@ -436,17 +436,17 @@ public class MV extends MethodVisitor{
                 break;
             // =============================================== Float compares (use with IF* command) ==
             case Opcodes.FCMPL: // 149
-                commands.push("fcmpl");
+                commands.push(Prefix.FCMPL);
                 break;
             case Opcodes.FCMPG: // 150
-                commands.push("fcmpg");
+                commands.push(Prefix.FCMPG);
                 break;
             // =============================================== Double compares (use with IF* command) ==
             case Opcodes.DCMPL: // 151
-                commands.push("dcmpl");
+                commands.push(Prefix.DCMPL);
                 break;
             case Opcodes.DCMPG: // 152
-                commands.push("dcmpg");
+                commands.push(Prefix.DCMPG);
                 break;
             // =============================================== returns ==
             case Opcodes.IRETURN: // 172
@@ -480,18 +480,8 @@ public class MV extends MethodVisitor{
             case Opcodes.MONITOREXIT: // 195
                 out.add("monitorexit");
                 break;
-
-        }
-
-        if (opcode == Opcodes.NOP) {
-
-
-        } else if (opcode == Opcodes.MONITORENTER) { // 194
-            out.add("monitorenter");
-        } else if (opcode == Opcodes.MONITOREXIT) { // 195
-            out.add("monitorexit");
-        } else {
-            //System.out.println("IN " + opcode);
+            default:
+                System.out.println("IN " + opcode);
         }
     }
 
@@ -550,6 +540,7 @@ public class MV extends MethodVisitor{
     public void visitTypeInsn(int opcode, String s) {
         switch (opcode) {
             case Opcodes.NEW: // 187
+                cv.classes.add(s); // add import class
                 out.add("new " + s);
                 break;
             case Opcodes.ANEWARRAY: // 189
@@ -686,8 +677,6 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitJumpInsn(int opcode, Label label) {
-        String[] types = {"eq", "ne", "slt", "sge", "sgt", "sle"};
-        int pos;
         switch (opcode) {
             case Opcodes.IFEQ: // 153
             case Opcodes.IFNE: // 154
@@ -695,10 +684,8 @@ public class MV extends MethodVisitor{
             case Opcodes.IFGE: // 156
             case Opcodes.IFGT: // 157
             case Opcodes.IFLE: // 158
-                // todo commands prefix
                 usedLabels.add(label.toString());
-                pos = opcode - Opcodes.IFEQ;
-                out.branch0(stack, label, types[pos]);
+                out.branch0(stack, commands, label, opcode - Opcodes.IFEQ);
                 break;
             case Opcodes.IF_ICMPEQ: // 159
             case Opcodes.IF_ICMPNE: // 160
@@ -706,10 +693,8 @@ public class MV extends MethodVisitor{
             case Opcodes.IF_ICMPGE: // 162
             case Opcodes.IF_ICMPGT: // 163
             case Opcodes.IF_ICMPLE: // 164
-                // todo commands prefix
                 usedLabels.add(label.toString());
-                pos = opcode - Opcodes.IF_ICMPEQ;
-                out.branch(stack, label, types[pos]);
+                out.branch(stack, commands, label, opcode - Opcodes.IF_ICMPEQ);
                 break;
             case Opcodes.IF_ACMPEQ: // 165
             case Opcodes.IF_ACMPNE: // 166
@@ -810,6 +795,8 @@ public class MV extends MethodVisitor{
     public void visitLocalVariable(String name, String sign, String s2, Label label, Label label1, int slot) {
         //System.out.println("VLV + " + name + " / " + sign + " " + s2 + " " + slot);
         vars.put(slot, new _LocalVar(name, sign));
+        String cn = Util.cutJavaClass(sign);
+        if (cn != null) this.cv.classes.add(cn);
     }
 
     @Override
@@ -838,14 +825,14 @@ public class MV extends MethodVisitor{
         // 0) info
         _JavaSignature ss = new _JavaSignature(this.javaSignature);
 
+        ps.print("; locals: ");
+        ps.println(max_local);
+        ps.print("; stack: ");
+        ps.println(max_stack);
+        ps.print("; args: ");
+        ps.println(this._argTypes.size());
         ps.println("define " + this._resType +  " @" + Util.classMethodSignature2id(this.cv.className, this.methodName, ss) + "(" + Util.enumArgs(this._argTypes, "%s") + ") {");
 
-        ps.print("    ; locals: ");
-        ps.println(max_local);
-        ps.print("    ; stack: ");
-        ps.println(max_stack);
-        ps.print("    ; args: ");
-        ps.println(this._argTypes.size());
 
         // 1) local vars & args
         int cntSlot = 0;

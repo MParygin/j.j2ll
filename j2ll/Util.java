@@ -6,6 +6,16 @@ import static j2ll.Internals.*;
 
 public final class Util {
 
+    // cut only class name
+    public static String cutJavaClass(String str) {
+        if (str.startsWith("[")) return cutJavaClass(str.substring(1));
+        if (str.startsWith("L")) {
+            int pos = str.indexOf(';');
+            return str.substring(1, pos);
+        } else return null;
+    }
+
+
     public static String javaSignature2irType(String str) {
         if (str.startsWith("[")) {
             return Internals.arrayOf(javaSignature2irType(str.substring(1)));
