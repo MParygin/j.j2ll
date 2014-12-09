@@ -1,24 +1,17 @@
 package j2ll;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
+
 import static j2ll.Internals.*;
 
 public final class Util {
 
-    // cut only class name
-    public static String cutJavaClass(String str) {
-        if (str.startsWith("[")) return cutJavaClass(str.substring(1));
-        if (str.startsWith("L")) {
-            int pos = str.indexOf(';');
-            return str.substring(1, pos);
-        } else return null;
-    }
-
-
-    public static String javaSignature2irType(String str) {
+    public static String javaSignature2irType(Resolver resolver, String str) {
         if (str.startsWith("[")) {
-            return Internals.arrayOf(javaSignature2irType(str.substring(1)));
+            return Internals.arrayOf(javaSignature2irType(resolver, str.substring(1)));
         }
 
         if (str.equals("B")) {
@@ -37,28 +30,27 @@ public final class Util {
             return DOUBLE;
         } else if (str.equals("V")) {
             return "void";
+        } else if (str.startsWith("L")) {
+            str = str.substring(1, str.length() - 1);
+            return resolver.resolve(str);
         }
         return null;
     }
 
-    @Deprecated
-    public static List<String> javaSignatures2irTypes(String str) {
+    public static List<String> javaSignatures2irTypes(Resolver resolver, String str) {
+        System.out.print("Parse ");
+        System.out.println(str);
+
         List<String> result = new ArrayList<String>();
-        for (char $ : str.toCharArray()) {
-            if ($ == 'I') {
-                result.add("i32");
-            } else if ($ == 'J') {
-                result.add("i64");
-            } else if ($ == 'F') {
-                result.add("float");
-            } else if ($ == 'D') {
-                result.add("double");
-            } else if ($ == 'S') {
-                result.add("i16");
-            } else if ($ == 'V') {
-                result.add("void");
+        StringBuilder tmp = new StringBuilder();
+        for (char c : str.toCharArray()) {
+            tmp.append(c);
+            if (c == 'S' || c == 'C' || c == 'I' || c == 'J' || c == 'F' || c == 'D' ||  c == ';') {
+                result.add(javaSignature2irType(resolver, tmp.toString()));
+                tmp.setLength(0);
             }
         }
+        if (tmp.length() > 0) result.add(javaSignature2irType(resolver, tmp.toString()));
         return result;
     }
 
@@ -87,6 +79,20 @@ public final class Util {
         result.append(signature.getJavaArgs());
         result.append('"');
         return result.toString();
+    }
+
+    public static String class2struct(Resolver resolver, String className) {
+        try {
+            Class c = Class.forName(className.replace('/', '.'));
+            StringJoiner joiner = new StringJoiner(", ", "{", "}");
+            for (Field f : c.getDeclaredFields()) {
+                Class fc = f.getType();
+                joiner.add(Internals.java2ir(resolver, fc));
+            }
+            return "%\"struct." + className + "\" = type " + joiner; //todo struct -> internals
+        } catch (Exception e) {
+            return className + " is unknown";
+        }
     }
 
 }

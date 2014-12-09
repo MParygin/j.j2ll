@@ -15,7 +15,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         //String className = "test.Linpack";
-        String className = "test.Test_array";
+        String className = "test.Test";
         //String className = "fenix.core$f4";
 
 

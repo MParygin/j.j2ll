@@ -1,17 +1,22 @@
 package test;
 
 public class Test {
+
     int c;
+    long fff;
+    double fffe;
+    char fffee;
+    char fffee3;
+    char fffee8;
+    char fffee9;
+    char fffee0;
+    //Linpack ppp = new Linpack();
 
     public Test() {
         int a= 10;
         int b = a * 10;
         c = b >> 1;
     }
-
-
-
-
 
     //    public int ST_INT = 10;
 //    public double ST_DBL = 10.0;
@@ -38,8 +43,10 @@ public class Test {
 
     public static void main() {
 
-        Test tt = new Test();
-        linux.glibc.put(tt.c);
+//        Test tt = new Test();
+//        linux.glibc.put(tt.c);
+
+        new Test();
 
 /*
         linux.glibc.put(0);

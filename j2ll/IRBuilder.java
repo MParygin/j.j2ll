@@ -36,6 +36,17 @@ public class IRBuilder {
         add(tmp.toString());
     }
 
+    public void _new(_Stack stack, Resolver resolver, String name) {
+        String struc = resolver.resolveStruct(name);
+        String object = resolver.resolve(name);
+        String res = stack.pushObjRef(object);
+
+        add("; " + resolver.resolveStruct(name));
+        add("%_" + tmp + " = call i8* @malloc(" + Internals.structSize(struc) + ")");
+        add(res + " = bitcast i8* %_" + tmp + " to " + object);
+        tmp++;
+    }
+
     public void neg(_Stack stack, String type) {
         StackValue value = stack.pop();
         String res = stack.push(type);

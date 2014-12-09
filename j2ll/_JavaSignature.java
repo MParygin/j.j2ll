@@ -14,15 +14,15 @@ public class _JavaSignature {
     private String result;
     private List<String> args;
 
-    public _JavaSignature(String str) {
+    public _JavaSignature(Resolver resolver, String str) {
         int posA = str.indexOf('(');
         if (posA == -1) throw new IllegalArgumentException();
         int posB = str.indexOf(')');
         if (posB == -1) throw new IllegalArgumentException();
         this.javaArgs = str.substring(posA + 1, posB);
         this.javaResult = str.substring(posB + 1);
-        this.args = Util.javaSignatures2irTypes(this.javaArgs);
-        this.result = Util.javaSignature2irType(this.javaResult);
+        this.args = Util.javaSignatures2irTypes(resolver, this.javaArgs);
+        this.result = Util.javaSignature2irType(resolver, this.javaResult);
     }
 
     public String getJavaArgs() {
@@ -34,15 +34,16 @@ public class _JavaSignature {
     }
 
     public List<String> getArgs() {
-        return Util.javaSignatures2irTypes(javaArgs);
+        return this.args;
     }
 
     public String getResult() {
         return this.result;
     }
 
-    public String getSignatureCall(String className, String methodName, _Stack stack) {
+    public String getSignatureCall(String className, String methodName, _Stack stack, String prefix) {
         StringJoiner joiner = new StringJoiner(", ", this.result + " @" + getID(className, methodName) + "(", ")");
+        if (prefix != null) joiner.add(prefix);
         List<String> pops = new ArrayList<String>();
         for (int i = 0; i < this.args.size(); i++) {
             pops.add(0, stack.pop().toString());

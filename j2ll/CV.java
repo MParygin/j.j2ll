@@ -19,7 +19,7 @@ public class CV extends ClassVisitor {
     private List<MV> methods = new ArrayList<MV>();
     // shared states
     Set<String> declares = new HashSet<String>();
-    Set<String> classes = new HashSet<String>();
+    Resolver resolver = new Resolver();
 
 
     public CV(PrintStream ps) {
@@ -83,25 +83,16 @@ public class CV extends ClassVisitor {
         this.ps.println();
 
         // classes
-        for (String name : classes) {
-            this.ps.println("use " + name);
+        for (String name : resolver.getClasses()) {
+            this.ps.println(Util.class2struct(this.resolver, name) + " ; use " + name);
         }
 
 
         // out fields
         for (_Field field : staticFields) {
-            String ir = Util.javaSignature2irType(field.javaSignature);
+            String ir = Util.javaSignature2irType(this.resolver, field.javaSignature);
             this.ps.println("@" + this.className + "." +field.name + " = external global " + ir);
         }
-        this.ps.println();
-
-        // out class
-        StringJoiner joiner = new StringJoiner(", ", "%\"" + this.className + "\" = type {", "}");
-        for (_Field field : fields) {
-            String ir = Util.javaSignature2irType(field.javaSignature);
-            joiner.add(ir);
-        }
-        this.ps.println(joiner);
         this.ps.println();
 
         // out methods

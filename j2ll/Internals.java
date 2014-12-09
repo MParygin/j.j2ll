@@ -77,6 +77,19 @@ public class Internals {
         return "{i32, [0 x double]}*";
     }
 
+    public static String structSize(String struct) {
+        return "i32 ptrtoint (" + struct + "* getelementptr (" + struct + "* null, i32 1) to i32)";
+    }
 
+    public static String java2ir(Resolver resolver, Class c) {
+        if ("byte".equals(c.getName())) return BYTE;
+        if ("short".equals(c.getName())) return SHORT;
+        if ("int".equals(c.getName())) return INT;
+        if ("long".equals(c.getName())) return LONG;
+        if ("char".equals(c.getName())) return CHAR;
+        if ("float".equals(c.getName())) return FLOAT;
+        if ("double".equals(c.getName())) return DOUBLE;
+        return resolver.resolve(c.getName().replace('.', '/'));
+    }
 
 }
