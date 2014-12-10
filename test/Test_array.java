@@ -13,4 +13,8 @@ public class Test_array {
         return a[index];
     }
 
+    public static int get(int[][] a, int index0, int index1) {
+        return a[index0][index1];
+    }
+
 }

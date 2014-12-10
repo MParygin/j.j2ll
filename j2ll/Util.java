@@ -95,4 +95,18 @@ public final class Util {
         }
     }
 
+    public static int class2ptr(String className, String name) {
+        try {
+            Class c = Class.forName(className.replace('/', '.'));
+            StringJoiner joiner = new StringJoiner(", ", "{", "}");
+            int pos = 0;
+            for (Field f : c.getDeclaredFields()) {
+                if (name.equals(f.getName())) return pos;
+                pos++;
+            }
+            return pos;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }

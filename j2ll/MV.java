@@ -565,13 +565,11 @@ public class MV extends MethodVisitor{
             case Opcodes.PUTSTATIC: // 179 todo
                 out.add("putstatic " + s + " " + s1 + " " + s2);
                 break;
-            case Opcodes.GETFIELD: // 180 todo
-                out.add("getfield " + s + " " + s1 + " " + s2);
+            case Opcodes.GETFIELD: // 180
+                out.getfield(stack, this.cv.resolver, s, s1, s2);
                 break;
-            case Opcodes.PUTFIELD: // 181 todo
-                StackValue value = stack.pop();
-                StackValue inst = stack.pop();
-                out.add("putfield " + s + " " + s1 + " " + s2 + " ( " + inst.fullName() + " := " + value.fullName() + " )");
+            case Opcodes.PUTFIELD: // 181
+                out.putfield(stack, this.cv.resolver, s, s1, s2);
                 break;
             default:
                 System.out.println("VFI " + opcode + " " + s);
@@ -775,7 +773,7 @@ public class MV extends MethodVisitor{
 
     @Override
     public void visitMultiANewArrayInsn(String s, int i) {
-        System.out.println("MNA " + s + " " + i);
+       out.add("MNA " + s + " " + i);
     }
 
     @Override

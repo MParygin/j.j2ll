@@ -120,16 +120,14 @@ public class Linpack {
         mflops_result = (int) (mflops_result * 1000);
         mflops_result /= 1000;
 
-        System.out.println(
-                "Mflops/s: "
-                        + mflops_result
-                        + "  Time: "
-                        + time_result
-                        + " secs"
-                        + "  Norm Res: "
-                        + residn_result
-                        + "  Precision: "
-                        + eps_result);
+        System.out.print("Mflops/s: ");
+        System.out.print(mflops_result);
+        System.out.print("  Time: ");
+        System.out.print(time_result);
+        System.out.print(" secs   Norm Res: ");
+        System.out.print(residn_result);
+        System.out.print("  Precision: ");
+        System.out.print(eps_result);
     }
 
     static final double matgen(double a[][], final int n, double b[]) {

@@ -82,9 +82,15 @@ public class CV extends ClassVisitor {
         }
         this.ps.println();
 
-        // classes
+        // use classes
+        this.ps.println("; first generation");
+        Resolver next = new Resolver();
         for (String name : resolver.getClasses()) {
-            this.ps.println(Util.class2struct(this.resolver, name) + " ; use " + name);
+            this.ps.println(Util.class2struct(next, name) + " ; use " + name);
+        }
+        this.ps.println("; second generation");
+        for (String name : next.getClasses()) {
+            this.ps.println(Util.class2struct(next, name) + " ; use " + name);
         }
 
 

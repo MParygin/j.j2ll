@@ -16,6 +16,8 @@ public class Test {
         int a= 10;
         int b = a * 10;
         c = b >> 1;
+
+        fffe = 17;
     }
 
     //    public int ST_INT = 10;
@@ -43,10 +45,14 @@ public class Test {
 
     public static void main() {
 
-//        Test tt = new Test();
-//        linux.glibc.put(tt.c);
+        Test pt = new Test();
+        pt.fffe = 19;
 
-        new Test();
+        linux.glibc.put(pt.fff);
+        pt.fff = 15553;
+        pt.c = 7;
+        linux.glibc.put(pt.fff);
+
 
 /*
         linux.glibc.put(0);
@@ -72,7 +78,7 @@ public class Test {
 ///            System.out.println("dd");
 ///        }
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < pt.c; i++) {
             arr_int[i] = 123456;
             arr_long[i] = 1234567890123456789L;
             arr_float[i] = 1.25f;
@@ -83,7 +89,7 @@ public class Test {
 
 //        linux.glibc.put(1111111111111111111L);
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < pt.c; i++) {
             linux.glibc.put(i);
             //linux.glibc.put(arr_int[i]);
             //linux.glibc.put(arr_long[i]);

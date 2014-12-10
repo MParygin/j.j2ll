@@ -118,6 +118,32 @@ public class IRBuilder {
         tmp++;
     }
 
+    public void putfield(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        StackValue value = stack.pop();
+        StackValue inst = stack.pop();
+        String res = Util.javaSignature2irType(resolver, signature);
+
+        add("; putfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " := " + value.fullName() + " )");
+
+        add("%__tmp" + tmp + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        add("store " + value.fullName() + ", " + res + "* %__tmp" + tmp);
+        tmp++;
+    }
+
+    public void getfield(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        StackValue inst = stack.pop();
+        String res = Util.javaSignature2irType(resolver, signature);
+        String value = stack.push(res);
+
+        add("; getfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " )");
+
+        add("%__tmp" + tmp + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        add(value + " = load " + res + "* %__tmp" + tmp);
+        tmp++;
+
+    }
+
+
     public void astore(_Stack stack, String type) {
         StackValue value = stack.pop();
         StackValue index = stack.pop();
