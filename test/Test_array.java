@@ -17,4 +17,7 @@ public class Test_array {
         return a[index0][index1];
     }
 
+    public static int[] aa(int[][] a) {
+        return a[10];
+    }
 }

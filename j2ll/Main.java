@@ -15,14 +15,23 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         //String className = "test.Linpack";
-        String className = "test.Test_array";
+        String className = "test.Test";
         //String className = "fenix.core$f4";
 
 
         String out = "test.Test.ll";
         PrintStream ps = new PrintStream(new File("./tmp", out));
-        CV cv = new CV(ps);
+
+        Statistics statistics = new Statistics();
+        StatisticsCollector sc = new StatisticsCollector(statistics);
+        CV cv = new CV(ps, statistics);
+
+        // read class
         ClassReader cr = new ClassReader(className);
+        cr.accept(sc, 0);
+
+        System.out.println(statistics.getResolver().getClasses());
+
         cr.accept(cv, 0);
         ps.flush();
     }

@@ -1,15 +1,15 @@
 package j2ll;
 
-import com.sun.org.apache.bcel.internal.generic.FCONST;
 import org.objectweb.asm.*;
 
 import java.io.PrintStream;
 import java.util.*;
+
 import static j2ll.Internals.*;
 
 /**
  */
-public class MV extends MethodVisitor{
+public class MV extends MethodVisitor {
 
     // parent
     private CV cv;
@@ -24,7 +24,7 @@ public class MV extends MethodVisitor{
     String _resType;
 
     // local vars
-    Map<Integer, _LocalVar> vars = new HashMap<Integer, _LocalVar>();
+    LocalVars vars;
     // buffer
     IRBuilder out = new IRBuilder();
     // stack
@@ -43,7 +43,9 @@ public class MV extends MethodVisitor{
         super(i);
         this.methodName = methodName;
         this.javaSignature = javaSignature;
-        _JavaSignature s = new _JavaSignature(cv.resolver, this.javaSignature);
+        this.vars = cv.getStatistics().get(methodName + javaSignature);
+
+        _JavaSignature s = new _JavaSignature(cv.getStatistics().getResolver(), this.javaSignature);
         _argTypes = s.getArgs();
         _resType = s.getResult();
         this.cv = cv;
@@ -146,7 +148,7 @@ public class MV extends MethodVisitor{
                 out.aload(stack, DOUBLE);
                 break;
             case Opcodes.AALOAD: // 50
-                out.add("aaload"); //todo pop
+                out.aaload(stack);
                 break;
             case Opcodes.BALOAD: // 51
                 out.add("baload"); //todo pop
@@ -450,19 +452,11 @@ public class MV extends MethodVisitor{
                 break;
             // =============================================== returns ==
             case Opcodes.IRETURN: // 172
-                out.add("ret i32 " + stack.pop());
-                break;
             case Opcodes.LRETURN: // 173
-                out.add("ret i64 " + stack.pop());
-                break;
             case Opcodes.FRETURN: // 174
-                out.add("ret float " + stack.pop());
-                break;
             case Opcodes.DRETURN: // 175
-                out.add("ret double " + stack.pop());
-                break;
             case Opcodes.ARETURN: // 176
-                out.add("ret A " + stack.pop()); // todo
+                out.add("ret " + stack.pop().fullName());
                 break;
             case Opcodes.RETURN: // 177
                 out.add("ret void");
@@ -508,20 +502,21 @@ public class MV extends MethodVisitor{
     public void visitVarInsn(int opcode, int slot) {
         switch (opcode) {
             // =============================================== Load ==
+                //out.add(stack.push(INT) + " = load slot-pointer:" + slot);
+                //out.add(stack.push(LONG) + " = load slot-pointer:" + slot);
+                //out.add(stack.push(FLOAT) + " = load slot-pointer:" + slot);
+                //out.add(stack.push(DOUBLE) + " = load slot-pointer:" + slot);
             case Opcodes.ILOAD: // 21
-                out.add(stack.push(INT) + " = load slot-pointer:" + slot);
-                break;
             case Opcodes.LLOAD: // 22
-                out.add(stack.push(LONG) + " = load slot-pointer:" + slot);
-                break;
             case Opcodes.FLOAD: // 23
-                out.add(stack.push(FLOAT) + " = load slot-pointer:" + slot);
-                break;
             case Opcodes.DLOAD: // 24
-                out.add(stack.push(DOUBLE) + " = load slot-pointer:" + slot);
-                break;
             case Opcodes.ALOAD: // 25
-                out.add(stack.push("slot-type:" + slot) + " = load slot-pointer:" + slot);
+                {
+                    _LocalVar lv = this.vars.get(slot);
+                    String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
+                    String s = stack.push(type);
+                    out.add(s + " = load " + type + "* %" + lv.name);
+                }
                 break;
             // =============================================== Store (Store stack into local variable) ==
             case Opcodes.ISTORE: // 54
@@ -529,7 +524,11 @@ public class MV extends MethodVisitor{
             case Opcodes.FSTORE: // 56
             case Opcodes.DSTORE: // 57
             case Opcodes.ASTORE: // 58
-                out.add("store " + stack.pop().fullName() + ", slot-pointer:" + slot);
+                {
+                    _LocalVar lv = this.vars.get(slot);
+                    String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
+                    out.add("store " + stack.pop().fullName() + ", " + type + "* %" + lv.name);
+                }
                 break;
             default:
                 System.out.println("VVI " + opcode + " " + slot);
@@ -540,7 +539,7 @@ public class MV extends MethodVisitor{
     public void visitTypeInsn(int opcode, String s) {
         switch (opcode) {
             case Opcodes.NEW: // 187
-                out._new(stack, this.cv.resolver, s);
+                out._new(stack, this.cv.getStatistics().getResolver(), s);
                 break;
             case Opcodes.ANEWARRAY: // 189
                 out.add("a new array " + s);
@@ -566,10 +565,10 @@ public class MV extends MethodVisitor{
                 out.add("putstatic " + s + " " + s1 + " " + s2);
                 break;
             case Opcodes.GETFIELD: // 180
-                out.getfield(stack, this.cv.resolver, s, s1, s2);
+                out.getfield(stack, this.cv.getStatistics().getResolver(), s, s1, s2);
                 break;
             case Opcodes.PUTFIELD: // 181
-                out.putfield(stack, this.cv.resolver, s, s1, s2);
+                out.putfield(stack, this.cv.getStatistics().getResolver(), s, s1, s2);
                 break;
             default:
                 System.out.println("VFI " + opcode + " " + s);
@@ -586,7 +585,7 @@ public class MV extends MethodVisitor{
         switch (opcode) {
             case Opcodes.INVOKEVIRTUAL: // 182
                 {
-                    _JavaSignature s = new _JavaSignature(this.cv.resolver, signature);
+                    _JavaSignature s = new _JavaSignature(this.cv.getStatistics().getResolver(), signature);
                     String call = s.getSignatureCall(className, methodName, this.stack, null);
                     if ("void".equals(s.getResult())) {
                         out.add("call virt  " + call);
@@ -602,7 +601,7 @@ public class MV extends MethodVisitor{
                 break;
             case Opcodes.INVOKESPECIAL: // 183
                 {
-                    _JavaSignature s = new _JavaSignature(this.cv.resolver, signature);
+                    _JavaSignature s = new _JavaSignature(this.cv.getStatistics().getResolver(), signature);
                     StackValue th = stack.pop();
                     String call = s.getSignatureCall(className, methodName, this.stack, th.fullName());
                     if ("void".equals(s.getResult())) {
@@ -619,7 +618,7 @@ public class MV extends MethodVisitor{
                 break;
             case Opcodes.INVOKESTATIC: // 184
                 {
-                    _JavaSignature s = new _JavaSignature(this.cv.resolver, signature);
+                    _JavaSignature s = new _JavaSignature(this.cv.getStatistics().getResolver(), signature);
                     String call = s.getSignatureCall(className, methodName, this.stack, null);
                     if ("void".equals(s.getResult())) {
                         out.add("call " + call);
@@ -635,7 +634,7 @@ public class MV extends MethodVisitor{
                 break;
             case Opcodes.INVOKEINTERFACE: // 185
                 {
-                    _JavaSignature s = new _JavaSignature(this.cv.resolver, signature);
+                    _JavaSignature s = new _JavaSignature(this.cv.getStatistics().getResolver(), signature);
                     String call = s.getSignatureCall(className, methodName, this.stack, null);
                     if ("void".equals(s.getResult())) {
                         out.add("call int " + call);
@@ -651,7 +650,7 @@ public class MV extends MethodVisitor{
                 break;
             case Opcodes.INVOKEDYNAMIC: // 186
                 {
-                    _JavaSignature s = new _JavaSignature(this.cv.resolver, signature);
+                    _JavaSignature s = new _JavaSignature(this.cv.getStatistics().getResolver(), signature);
                     String call = s.getSignatureCall(className, methodName, this.stack, null);
                     if ("void".equals(s.getResult())) {
                         out.add("call dyn " + call);
@@ -794,8 +793,10 @@ public class MV extends MethodVisitor{
     @Override
     public void visitLocalVariable(String name, String sign, String s2, Label label, Label label1, int slot) {
         //System.out.println("VLV + " + name + " / " + sign + " " + s2 + " " + slot);
+/*
         vars.put(slot, new _LocalVar(name, sign));
-        Util.javaSignature2irType(this.cv.resolver, sign);
+        Util.javaSignature2irType(this.cv.getStatistics().getResolver(), sign);
+*/
     }
 
     @Override
@@ -822,7 +823,7 @@ public class MV extends MethodVisitor{
 
     public void out(PrintStream ps) {
         // 0) info
-        _JavaSignature ss = new _JavaSignature(this.cv.resolver, this.javaSignature);
+        _JavaSignature ss = new _JavaSignature(this.cv.getStatistics().getResolver(), this.javaSignature);
 
         ps.print("; locals: ");
         ps.println(max_local);
@@ -840,7 +841,7 @@ public class MV extends MethodVisitor{
             cntSlot++;
             // local var
             ps.print("    ");
-            ps.println("%" + lv.name + " = alloca " + Util.javaSignature2irType(this.cv.resolver, lv.signature) +  "\t\t; slot " + i + " = " + lv.signature);
+            ps.println("%" + lv.name + " = alloca " + Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature) +  "\t\t; slot " + i + " = " + lv.signature);
             // init from arg (!)
             if (this._argTypes.size() < cntSlot) continue;
             String argType = this._argTypes.get(cntSlot-1);
@@ -848,22 +849,22 @@ public class MV extends MethodVisitor{
         }
         // 2) text
         for (String str : out.getStrings()) {
-            int p = str.indexOf("slot-pointer");
+            int p = str.indexOf("slot-pointer2");
             if (p != -1) {
                 for (Integer slot : vars.keySet()) {
                     _LocalVar lv = vars.get(slot);
                     String s = "slot-pointer:" + slot;
-                    String r = Util.javaSignature2irType(this.cv.resolver, lv.signature) + "* %" + lv.name; // todo
+                    String r = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature) + "* %" + lv.name; // todo
                     str = str.replace(s, r);
                 }
             }
 
-            p = str.indexOf("slot-type");
+            p = str.indexOf("slot-type2");
             if (p != -1) {
                 for (Integer slot : vars.keySet()) {
                     _LocalVar lv = vars.get(slot);
                     String s = "slot-type:" + slot;
-                    String r = Util.javaSignature2irType(this.cv.resolver, lv.signature);
+                    String r = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
                     if (r == null) {
                         System.out.println("CF TYPE " + lv.signature);
                     } else {

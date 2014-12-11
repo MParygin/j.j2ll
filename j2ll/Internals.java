@@ -42,6 +42,10 @@ public class Internals {
         return "{i32, [0 x " + type + "]}*";
     }
 
+    public static String dearrayOf(String type) {
+        return type.substring(11, type.length() - 3);
+    }
+
     @Deprecated
     public static String structireArrayByte() {
         return "{i32, [0 x i8]}*";

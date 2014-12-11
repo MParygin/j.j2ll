@@ -9,7 +9,8 @@ public class CV extends ClassVisitor {
 
     // out
     private PrintStream ps;
-    
+    private Statistics statistics;
+
     // state
     String className;
     String superName;
@@ -19,12 +20,18 @@ public class CV extends ClassVisitor {
     private List<MV> methods = new ArrayList<MV>();
     // shared states
     Set<String> declares = new HashSet<String>();
-    Resolver resolver = new Resolver();
 
 
-    public CV(PrintStream ps) {
+
+
+    public CV(PrintStream ps, Statistics statistics) {
         super(Opcodes.ASM5);
         this.ps = ps;
+        this.statistics = statistics;
+    }
+
+    public Statistics getStatistics() {
+        return statistics;
     }
 
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
@@ -63,6 +70,7 @@ public class CV extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         // skip constructor
         //if ("<init>".equals(name)) return null;
+
         // parse
         MV mv = new MV(Opcodes.ASM5, name, desc, this);
         this.methods.add(mv);
@@ -85,7 +93,7 @@ public class CV extends ClassVisitor {
         // use classes
         this.ps.println("; first generation");
         Resolver next = new Resolver();
-        for (String name : resolver.getClasses()) {
+        for (String name : statistics.getResolver().getClasses()) {
             this.ps.println(Util.class2struct(next, name) + " ; use " + name);
         }
         this.ps.println("; second generation");
@@ -96,7 +104,7 @@ public class CV extends ClassVisitor {
 
         // out fields
         for (_Field field : staticFields) {
-            String ir = Util.javaSignature2irType(this.resolver, field.javaSignature);
+            String ir = Util.javaSignature2irType(statistics.getResolver(), field.javaSignature);
             this.ps.println("@" + this.className + "." +field.name + " = external global " + ir);
         }
         this.ps.println();

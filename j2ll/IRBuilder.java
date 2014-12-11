@@ -164,6 +164,16 @@ public class IRBuilder {
         tmp++;
     }
 
+    public void aaload(_Stack stack) {
+        StackValue index = stack.pop();
+        StackValue arrayRef = stack.pop();
+        String type = Internals.dearrayOf(arrayRef.getIR());
+        String value = stack.push(type);
+        add("%__tmp" + tmp + " = getelementptr " + arrayRef.fullName() + ", i32 0, i32 1, " + index.fullName());
+        add(value + " = load " + type + "* %__tmp" + tmp);
+        tmp++;
+    }
+
     public void fptosi(_Stack stack, String type) {
         operationto(stack, "fptosi", type);
     }
