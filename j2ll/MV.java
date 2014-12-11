@@ -434,7 +434,7 @@ public class MV extends MethodVisitor {
                 break;
             // =============================================== Long compares (use with IF* command) ==
             case Opcodes.LCMP: // 148
-                commands.push("lcmp");
+                commands.push(Prefix.LCMP);
                 break;
             // =============================================== Float compares (use with IF* command) ==
             case Opcodes.FCMPL: // 149
@@ -513,9 +513,14 @@ public class MV extends MethodVisitor {
             case Opcodes.ALOAD: // 25
                 {
                     _LocalVar lv = this.vars.get(slot);
-                    String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
-                    String s = stack.push(type);
-                    out.add(s + " = load " + type + "* %" + lv.name);
+                    if (lv != null) {
+                        String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
+                        String s = stack.push(type);
+                        out.add(s + " = load " + type + "* %" + lv.name);
+                    } else {
+                        String s = stack.push("i32");
+                        out.add(s + " = load " + "i32" + "* %" + slot);  //todo
+                    }
                 }
                 break;
             // =============================================== Store (Store stack into local variable) ==
@@ -526,8 +531,12 @@ public class MV extends MethodVisitor {
             case Opcodes.ASTORE: // 58
                 {
                     _LocalVar lv = this.vars.get(slot);
-                    String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
-                    out.add("store " + stack.pop().fullName() + ", " + type + "* %" + lv.name);
+                    if (lv != null) {
+                        String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
+                        out.add("store " + stack.pop().fullName() + ", " + type + "* %" + lv.name);
+                    } else {
+                        out.add("store " + stack.pop().fullName() + ", " + "i32" + "* %" + slot); // todo
+                    }
                 }
                 break;
             default:

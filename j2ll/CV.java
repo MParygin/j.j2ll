@@ -97,9 +97,10 @@ public class CV extends ClassVisitor {
             this.ps.println(Util.class2struct(next, name) + " ; use " + name);
         }
         this.ps.println("; second generation");
+        Resolver next2 = new Resolver();
         for (String name : next.getClasses()) {
-            this.ps.println(Util.class2struct(next, name) + " ; use " + name);
-        }
+            this.ps.println(Util.class2struct(next2, name) + " ; use " + name);
+        } // todo next2 ???
 
 
         // out fields

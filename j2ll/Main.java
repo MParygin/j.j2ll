@@ -15,8 +15,8 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         //String className = "test.Linpack";
-        String className = "test.Test";
-        //String className = "fenix.core$f4";
+        String className = "test.Test_compares";
+        //String className = "java.lang.Object";
 
 
         String out = "test.Test.ll";

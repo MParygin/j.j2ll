@@ -5,6 +5,7 @@ package j2ll;
  */
 public class Internals {
 
+    public static final String BOOLEAN = "i32";
     public static final String BYTE = "i8";
     public static final String CHAR = "i16";
     public static final String SHORT = "i16";

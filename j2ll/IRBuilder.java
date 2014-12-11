@@ -93,8 +93,13 @@ public class IRBuilder {
                 StackValue value2 = stack.pop();
                 StackValue value1 = stack.pop();
                 add("%__tmpc" + tmp + " = fcmp " + IR.FCMP[op] + " " + value1.fullName() + ", " + value2); // ordered compare
+            } else if (Prefix.LCMP.equals(cmd)) {
+                // long compare
+                StackValue value2 = stack.pop();
+                StackValue value1 = stack.pop();
+                add("%__tmpc" + tmp + " = icmp " + IR.ICMP[op] + " " + value1.fullName() + ", " + value2);
             } else {
-                System.err.println("Unknown prefix: " + commands.pop());
+                System.err.println("Unknown prefix: " + cmd);
             }
             add("br i1 %__tmpc" + tmp + ", label %" + label + ", label %__tmpl" + tmp);
             add("__tmpl" + tmp + ":");

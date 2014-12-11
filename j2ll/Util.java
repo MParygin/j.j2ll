@@ -30,6 +30,8 @@ public final class Util {
             return DOUBLE;
         } else if (str.equals("V")) {
             return "void";
+        } else if (str.equals("Z")) {
+            return BOOLEAN;
         } else if (str.startsWith("L")) {
             str = str.substring(1, str.length() - 1);
             return resolver.resolve(str);
