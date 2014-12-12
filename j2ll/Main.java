@@ -15,7 +15,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         //String className = "test.Linpack";
-        String className = "test.Test_compares";
+        String className = "test.Test";
         //String className = "java.lang.Object";
 
 

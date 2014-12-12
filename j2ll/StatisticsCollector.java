@@ -21,7 +21,7 @@ public final class StatisticsCollector extends ClassVisitor {
         // collect vars
         LocalVars lv = new LocalVars();
         this.statistics.put(name + desc, lv);
-        return new MethodVarsCollector(Opcodes.ASM5, lv, this.statistics.getResolver());
+        return new MethodStatisticsCollector(Opcodes.ASM5, lv, this.statistics.getResolver());
     }
 
 

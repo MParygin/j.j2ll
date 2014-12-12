@@ -87,6 +87,7 @@ public class Internals {
     }
 
     public static String java2ir(Resolver resolver, Class c) {
+        if ("boolean".equals(c.getName())) return BOOLEAN;
         if ("byte".equals(c.getName())) return BYTE;
         if ("short".equals(c.getName())) return SHORT;
         if ("int".equals(c.getName())) return INT;

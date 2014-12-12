@@ -43,11 +43,11 @@ public final class Util {
         System.out.print("Parse ");
         System.out.println(str);
 
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         StringBuilder tmp = new StringBuilder();
         for (char c : str.toCharArray()) {
             tmp.append(c);
-            if (c == 'S' || c == 'C' || c == 'I' || c == 'J' || c == 'F' || c == 'D' ||  c == ';') {
+            if (c == 'S' || c == 'C' || c == 'I' || c == 'J' || c == 'F' || c == 'D' ||  c == ';') { // todo all java signs
                 result.add(javaSignature2irType(resolver, tmp.toString()));
                 tmp.setLength(0);
             }

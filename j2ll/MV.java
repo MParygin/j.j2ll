@@ -3,7 +3,9 @@ package j2ll;
 import org.objectweb.asm.*;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 import static j2ll.Internals.*;
 
@@ -29,26 +31,31 @@ public class MV extends MethodVisitor {
     IRBuilder out = new IRBuilder();
     // stack
     _Stack stack = new _Stack();
-    Stack<String> commands = new Stack<String>();
+    Stack<String> commands = new Stack<>();
     // labels
-    List<Label> labels = new ArrayList<Label>();
-    List<String> usedLabels = new ArrayList<String>();
+    List<Label> labels = new ArrayList<>();
+    List<String> usedLabels = new ArrayList<>();
 
 
     int max_local;
     int max_stack;
     int tmp;
 
-    public MV(int i, String methodName, String javaSignature, CV cv) {
-        super(i);
+    public MV(String methodName, String javaSignature, CV cv) {
+        super(Opcodes.ASM5);
         this.methodName = methodName;
         this.javaSignature = javaSignature;
         this.vars = cv.getStatistics().get(methodName + javaSignature);
+        this.cv = cv;
 
+        // signature
         _JavaSignature s = new _JavaSignature(cv.getStatistics().getResolver(), this.javaSignature);
         _argTypes = s.getArgs();
         _resType = s.getResult();
-        this.cv = cv;
+        // constructor`s implicit parameter
+        if ("<init>".equals(methodName)) {
+            _argTypes.add(0, cv.getStatistics().getResolver().resolve(this.cv.className));
+        }
     }
 
     public MV(int i, MethodVisitor methodVisitor) {

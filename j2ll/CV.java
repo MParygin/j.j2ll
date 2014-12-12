@@ -3,7 +3,10 @@ package j2ll;
 import org.objectweb.asm.*;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CV extends ClassVisitor {
 
@@ -20,9 +23,6 @@ public class CV extends ClassVisitor {
     private List<MV> methods = new ArrayList<MV>();
     // shared states
     Set<String> declares = new HashSet<String>();
-
-
-
 
     public CV(PrintStream ps, Statistics statistics) {
         super(Opcodes.ASM5);
@@ -68,11 +68,7 @@ public class CV extends ClassVisitor {
     }
 
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        // skip constructor
-        //if ("<init>".equals(name)) return null;
-
-        // parse
-        MV mv = new MV(Opcodes.ASM5, name, desc, this);
+        MV mv = new MV(name, desc, this);
         this.methods.add(mv);
         return mv;
     }

@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public final class Resolver {
 
-    private Set<String> classes = new HashSet<String>();
+    private Set<String> classes = new HashSet<>();
 
     public String resolve(String str) {
         if (classes.add(str))
