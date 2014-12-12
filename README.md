@@ -11,7 +11,3 @@ Features:
 * Use glibc
 
 At this moment project in active development, many things does not work.
-
-TODO list
-
-* Floating point constant

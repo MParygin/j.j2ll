@@ -24,6 +24,8 @@ public class Test {
     }
 
     public static void main() {
+        long a = System.currentTimeMillis();
+
         Test test = new Test();
         test.in = 44;
         linux.glibc.put(test.in);
@@ -31,7 +33,9 @@ public class Test {
         double v[] = new double[10000];
         for (int i = 0; i < 10000; i++) v[i] = i * 1.2d;
 
-        for (int i = 0; i < 10000; i++)
-        for (int j = 0; j < 10000; j++) v[i] = v[i] + v[j];
+       // for (int i = 0; i < 10000; i++)
+       // for (int j = 0; j < 10000; j++) v[i] = v[i] + v[j];
+
+        linux.glibc.put(System.currentTimeMillis() - a);
     }
 }

@@ -6,9 +6,9 @@ package j2ll;
 public class Internals {
 
     public static final String BOOLEAN = "i32";
-    public static final String BYTE = "i8";
-    public static final String CHAR = "i16";
-    public static final String SHORT = "i16";
+    public static final String BYTE = "i32"; //todo
+    public static final String CHAR = "i32"; // todo
+    public static final String SHORT = "i32"; // todo
     public static final String INT = "i32";
     public static final String LONG = "i64";
     public static final String FLOAT = "float";

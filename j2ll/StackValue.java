@@ -38,6 +38,10 @@ public class StackValue {
 
     public String toString() {
         if (this.type == TYPE_REG || this.type == TYPE_OBJREF) return "%stack" + value;
+        if (value instanceof Float) {
+            Float f = (Float) value;
+            return "0x" + Integer.toHexString(Float.floatToRawIntBits(f)) + "00000000";
+        }
         return value.toString(); // imm ??
     }
 

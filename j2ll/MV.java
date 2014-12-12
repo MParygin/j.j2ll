@@ -509,10 +509,6 @@ public class MV extends MethodVisitor {
     public void visitVarInsn(int opcode, int slot) {
         switch (opcode) {
             // =============================================== Load ==
-                //out.add(stack.push(INT) + " = load slot-pointer:" + slot);
-                //out.add(stack.push(LONG) + " = load slot-pointer:" + slot);
-                //out.add(stack.push(FLOAT) + " = load slot-pointer:" + slot);
-                //out.add(stack.push(DOUBLE) + " = load slot-pointer:" + slot);
             case Opcodes.ILOAD: // 21
             case Opcodes.LLOAD: // 22
             case Opcodes.FLOAD: // 23
@@ -540,7 +536,9 @@ public class MV extends MethodVisitor {
                     _LocalVar lv = this.vars.get(slot);
                     if (lv != null) {
                         String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
-                        out.add("store " + stack.pop().fullName() + ", " + type + "* %" + lv.name);
+                        StackValue value = stack.pop();
+                        System.out.println(value.getIR());
+                        out.add("store " + value.fullName() + ", " + type + "* %" + lv.name);
                     } else {
                         out.add("store " + stack.pop().fullName() + ", " + "i32" + "* %" + slot); // todo
                     }
