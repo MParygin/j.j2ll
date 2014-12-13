@@ -4,12 +4,14 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Vars Collector
  */
 public final class MethodStatisticsCollector extends MethodVisitor {
 
-    // local vars
     LocalVars vars;
     Resolver resolver;
 
@@ -56,4 +58,5 @@ public final class MethodStatisticsCollector extends MethodVisitor {
             break;
         }
     }
+
 }

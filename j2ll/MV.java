@@ -775,13 +775,28 @@ public class MV extends MethodVisitor {
     }
 
     @Override
-    public void visitTableSwitchInsn(int i, int i1, Label label, Label... labels) {
-        System.out.println("TS " + i + " " + i1);
+    public void visitTableSwitchInsn(int from, int to, Label label, Label... labels) {
+        usedLabels.add(label.toString());
+        StackValue sv = stack.pop();
+        out.add("switch " + sv.fullName() + ", label %" + label + " [");
+        for(Label l : labels) {
+            usedLabels.add(l.toString());
+            out.add("    i32 " + from + ", label %" + l);
+            from++;
+        }
+        out.add("]");
     }
 
     @Override
-    public void visitLookupSwitchInsn(Label label, int[] ints, Label[] labels) {
-        System.out.println("LS " + label + " " + ints);
+    public void visitLookupSwitchInsn(Label label, int[] values, Label[] labels) {
+        usedLabels.add(label.toString());
+        StackValue sv = stack.pop();
+        out.add("switch " + sv.fullName() + ", label %" + label + " [");
+        for (int i = 0; i < values.length; i++) {
+            usedLabels.add(labels[i].toString());
+            out.add("    i32 " + values[i] + ", label %" + labels[i]);
+        }
+        out.add("]");
     }
 
     @Override
@@ -863,7 +878,7 @@ public class MV extends MethodVisitor {
         }
         // 2) text
         for (String str : out.getStrings()) {
-            int p = str.indexOf("slot-pointer2");
+            int p = str.indexOf("slot-pointer2");  //todo
             if (p != -1) {
                 for (Integer slot : vars.keySet()) {
                     _LocalVar lv = vars.get(slot);

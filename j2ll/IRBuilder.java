@@ -19,6 +19,10 @@ public class IRBuilder {
         strings.add(str);
     }
 
+    public void comment(String str) {
+        strings.add("; " + str);
+    }
+
     public void in2out1(_Stack stack, String op, String type) {
         StackValue op2 = stack.pop();
         StackValue op1 = stack.pop();
