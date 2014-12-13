@@ -100,9 +100,10 @@ public class CV extends ClassVisitor {
 
 
         // out fields
+        this.ps.println("; globals");
         for (_Field field : staticFields) {
             String ir = Util.javaSignature2irType(statistics.getResolver(), field.javaSignature);
-            this.ps.println("@" + this.className + "." +field.name + " = external global " + ir);
+            this.ps.println(Util.static2str(this.className, field.name) + " = internal global " + ir + " 0");
         }
         this.ps.println();
 

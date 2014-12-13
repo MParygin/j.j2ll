@@ -42,6 +42,10 @@ public class StackValue {
             Float f = (Float) value;
             return "0x" + Integer.toHexString(Float.floatToRawIntBits(f)) + "00000000";
         }
+        if (value instanceof Double) {
+            Double f = (Double) value;
+            return "0x" + Long.toHexString(Double.doubleToRawLongBits(f));
+        }
         return value.toString(); // imm ??
     }
 

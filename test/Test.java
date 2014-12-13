@@ -10,6 +10,8 @@ public class Test {
     float ft;
     double db;
 
+    static long sl = 1111;
+    static Test singleton = new Test();
 
     public Test() {
         this.bl = true;
@@ -52,5 +54,7 @@ public class Test {
 
 
         linux.glibc.put(System.currentTimeMillis() - a);
+
+        linux.glibc.put(sl);
     }
 }

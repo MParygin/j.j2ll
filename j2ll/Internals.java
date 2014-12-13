@@ -44,7 +44,12 @@ public class Internals {
     }
 
     public static String dearrayOf(String type) {
-        return type.substring(11, type.length() - 3);
+        try {
+            return type.substring(11, type.length() - 3);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return type;
+        }
     }
 
     @Deprecated

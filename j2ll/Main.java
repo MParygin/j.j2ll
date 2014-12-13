@@ -14,12 +14,9 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        System.out.println(Integer.toHexString(Float.floatToRawIntBits(1.25f)));
-
-
-        //String className = "test.Linpack";
+        //String className = "org.objectweb.asm.ClassReader";
         String className = "test.Test";
-        //String className = "java.lang.Object";
+        //String className = "java.lang.Long";
 
 
         String out = "test.Test.ll";

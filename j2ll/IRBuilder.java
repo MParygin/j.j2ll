@@ -15,6 +15,7 @@ public class IRBuilder {
 
     private List<String> strings = new ArrayList<String>();
 
+    @Deprecated
     public void add(String str) {
         strings.add(str);
     }
@@ -39,6 +40,8 @@ public class IRBuilder {
         tmp.append(op2);
         add(tmp.toString());
     }
+
+
 
     public void _new(_Stack stack, Resolver resolver, String name) {
         String struc = resolver.resolveStruct(name);
@@ -128,29 +131,54 @@ public class IRBuilder {
     }
 
     public void putfield(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        // state
         StackValue value = stack.pop();
         StackValue inst = stack.pop();
-        String res = Util.javaSignature2irType(resolver, signature);
-
-        add("; putfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " := " + value.fullName() + " )");
-
-        add("%__tmp" + tmp + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
-        add("store " + value.fullName() + ", " + res + "* %__tmp" + tmp);
-        tmp++;
+        String ty = Util.javaSignature2irType(resolver, signature);
+        String reg = allocReg();
+        // out
+        comment("putfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " := " + value.fullName() + " )");
+// todo *       getelementptr(reg, inst.getIR(), inst.toString(), 0, Util.class2ptr(className, name));
+        add(reg + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        store(ty, value.toString(), reg);
     }
+
+    public void putstatic(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        // state
+        StackValue value = stack.pop();
+        String ty = Util.javaSignature2irType(resolver, signature);
+        String reg = allocReg();
+        // out
+        comment("putstatic " + className + " " + name + " " + signature + " ( " + signature + " := " + value.fullName() + " )");
+        getelementptr(reg, ty, Util.static2str(className, name));
+        store(ty, value.toString(), reg);
+    }
+
 
     public void getfield(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        // state
         StackValue inst = stack.pop();
-        String res = Util.javaSignature2irType(resolver, signature);
-        String value = stack.push(res);
-
-        add("; getfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " )");
-
-        add("%__tmp" + tmp + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
-        add(value + " = load " + res + "* %__tmp" + tmp);
-        tmp++;
-
+        String ty = Util.javaSignature2irType(resolver, signature);
+        String result = stack.push(ty);
+        String reg = allocReg();
+        // out
+        comment("getfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " )");
+        add(reg + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        load(result, ty, reg);
     }
+
+    public void getstatic(_Stack stack, Resolver resolver, String className, String name, String signature) {
+        // state
+        String ty = Util.javaSignature2irType(resolver, signature);
+        String result = stack.push(ty);
+        String reg = allocReg();
+        // out
+        comment("getstatic " + className + " " + name + " " + signature + " ( " + result + " := " + signature + " )");
+        getelementptr(reg, ty, Util.static2str(className, name));
+        load(result, ty, reg);
+    }
+
+
 
 
     public void astore(_Stack stack, String type) {
@@ -191,10 +219,63 @@ public class IRBuilder {
         operationto(stack, "sitofp", type);
     }
 
+
     public void operationto(_Stack stack, String op, String type) {
         StackValue f = stack.pop();
         String res = stack.push(type);
         add(res + " = " + op + " " + f.fullName() + " to " + type);
+    }
+
+    // =================================================================================================================
+
+    private String allocReg() {
+        String result = "%__tmp" + tmp;
+        tmp++;
+        return result;
+    }
+
+    // <result> = getelementptr <pty>* <ptrval>{, <ty> <idx>}*
+    public void getelementptr(String result, String pty, String ptrval, Object ... idx) {
+        StringBuilder tmp = new StringBuilder();
+        tmp.append(result);
+        tmp.append(" = getelementptr ");
+        tmp.append(pty);
+        tmp.append("* ");
+        tmp.append(ptrval);
+        for (Object id : idx) {
+            if (id instanceof Integer) {
+                tmp.append(", i32 ");
+            } else if (id instanceof Long) {
+                tmp.append(", i64 ");
+            }
+            tmp.append(id);
+        }
+        add(tmp.toString());
+    }
+
+    // <result> = load [volatile] <ty>* <pointer>
+    public void load(String result, String ty, String pointer) {
+        StringBuilder tmp = new StringBuilder();
+        tmp.append(result);
+        tmp.append(" = load ");
+        tmp.append(ty);
+        tmp.append("* ");
+        tmp.append(pointer);
+        add(tmp.toString());
+    }
+
+    // store [volatile] <ty> <value>, <ty>* <pointer>
+    public void store(String ty, String value, String pointer) {
+        StringBuilder tmp = new StringBuilder();
+        tmp.append("store ");
+        tmp.append(ty);
+        tmp.append(" ");
+        tmp.append(value);
+        tmp.append(", ");
+        tmp.append(ty);
+        tmp.append("* ");
+        tmp.append(pointer);
+        add(tmp.toString());
     }
 
 

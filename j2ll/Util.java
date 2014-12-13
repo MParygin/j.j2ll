@@ -111,4 +111,9 @@ public final class Util {
             return 0;
         }
     }
+
+    public static String static2str(String className, String name) {
+        return "@\"" + className + ":" + name + "\"";
+    }
+
 }

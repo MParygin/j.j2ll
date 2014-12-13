@@ -64,12 +64,13 @@ public class MV extends MethodVisitor {
 
     @Override
     public void visitParameter(String s, int i) {
-        System.out.println("VP " + s + " " + i);
+        System.out.println("visitParameter " + s + " " + i);
     }
 
     @Override
     public AnnotationVisitor visitAnnotationDefault() {
-        return super.visitAnnotationDefault();
+        System.out.println("visitAnnotationDefault");
+        return null;
     }
 
     @Override
@@ -89,11 +90,12 @@ public class MV extends MethodVisitor {
 
     @Override
     public void visitAttribute(Attribute attribute) {
-        System.out.println("VA " + attribute);
+        System.out.println("visitAttribute " + attribute);
     }
 
     @Override
     public void visitCode() {
+        System.out.println("visitCode");
     }
 
     @Override
@@ -501,7 +503,7 @@ public class MV extends MethodVisitor {
                 out.newArray(stack, Internals.newJVMArray(value));
                 break;
             default:
-                System.out.println("INI " + opcode + " " + value);
+                System.out.println("visitIntInsn " + opcode + " " + value);
         }
     }
 
@@ -545,7 +547,7 @@ public class MV extends MethodVisitor {
                 }
                 break;
             default:
-                System.out.println("VVI " + opcode + " " + slot);
+                System.out.println("visitVarInsn " + opcode + " " + slot);
         }
     }
 
@@ -565,33 +567,33 @@ public class MV extends MethodVisitor {
                 out.add("instanceof " + s);
                 break;
             default:
-                System.out.println("VTI " + opcode + " " + s);
+                System.out.println("visitTypeInsn " + opcode + " " + s);
         }
     }
 
     @Override
-    public void visitFieldInsn(int opcode, String s, String s1, String s2) {
+    public void visitFieldInsn(int opcode, String className, String name, String signature) {
         switch (opcode) {
-            case Opcodes.GETSTATIC: // 178 todo
-                out.add("getstatic " + s + " " + s1 + " " + s2);
+            case Opcodes.GETSTATIC: // 178
+                out.getstatic(stack, this.cv.getStatistics().getResolver(), className, name, signature);
                 break;
-            case Opcodes.PUTSTATIC: // 179 todo
-                out.add("putstatic " + s + " " + s1 + " " + s2);
+            case Opcodes.PUTSTATIC: // 179
+                out.putstatic(stack, this.cv.getStatistics().getResolver(), className, name, signature);
                 break;
             case Opcodes.GETFIELD: // 180
-                out.getfield(stack, this.cv.getStatistics().getResolver(), s, s1, s2);
+                out.getfield(stack, this.cv.getStatistics().getResolver(), className, name, signature);
                 break;
             case Opcodes.PUTFIELD: // 181
-                out.putfield(stack, this.cv.getStatistics().getResolver(), s, s1, s2);
+                out.putfield(stack, this.cv.getStatistics().getResolver(), className, name, signature);
                 break;
             default:
-                System.out.println("VFI " + opcode + " " + s);
+                System.out.println("visitFieldInsn " + opcode + " " + className);
         }
     }
 
     @Override
     public void visitMethodInsn(int opcode, String s, String s1, String s2) {
-        System.out.println("VMI old " + opcode + " " + s);
+        System.out.println("visitMethodInsn " + opcode + " " + s);
     }
 
     @Override
@@ -679,13 +681,13 @@ public class MV extends MethodVisitor {
                 }
                 break;
             default:
-                System.out.println("VMI " + opcode);
+                System.out.println("visitMethodInsn " + opcode);
         }
     }
 
     @Override
     public void visitInvokeDynamicInsn(String s, String s1, Handle handle, Object... objects) {
-        System.out.println("VIDI " + s + " " + s1);
+        System.out.println("visitInvokeDynamicInsn " + s + " " + s1);
     }
 
     @Override
@@ -732,7 +734,7 @@ public class MV extends MethodVisitor {
                 out.add("ifnotnull*"); //todo
                 break;
             default:
-                out.add("JMP " + opcode + " " + label.toString());
+                out.add("visitJumpInsn " + opcode + " " + label.toString());
         }
     }
 
@@ -801,22 +803,24 @@ public class MV extends MethodVisitor {
 
     @Override
     public void visitMultiANewArrayInsn(String s, int i) {
-       out.add("MNA " + s + " " + i);
+       out.add("visitMultiANewArrayInsn " + s + " " + i);
     }
 
     @Override
     public AnnotationVisitor visitInsnAnnotation(int i, TypePath typePath, String s, boolean b) {
-        return super.visitInsnAnnotation(i, typePath, s, b);
+        System.out.println("visitInsnAnnotation");
+        return null;
     }
 
     @Override
     public void visitTryCatchBlock(Label label, Label label1, Label label2, String s) {
-        System.out.println("TRY CATCH " + label + " " + label1 + " " + s);
+        System.out.println("visitTryCatchBlock " + label + " " + label1 + " " + s);
     }
 
     @Override
     public AnnotationVisitor visitTryCatchAnnotation(int i, TypePath typePath, String s, boolean b) {
-        return super.visitTryCatchAnnotation(i, typePath, s, b);
+        System.out.println("visitTryCatchAnnotation");
+        return null;
     }
 
     @Override
