@@ -16,7 +16,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         //String className = "org.objectweb.asm.ClassReader";
         String className = "test.Test";
-        //String className = "java.lang.Long";
+        //String className = "test.Linpack";
 
 
         String out = "test.Test.ll";

@@ -1,40 +1,9 @@
 package test;
 
-/*
- *
- * Modified 1/1/04 by Mario Jeckle (mcj) mario@jeckle.de Removed some dead code and
- * unused variables. Added final to some more methods. Removed superfluous
- * operations (like addition of 0) and non-required type conversion.
- *
- * Modified 3/3/97 by David M. Doolin (dmd) doolin@cs.utk.edu Fixed error in
- * matgen() method. Added some comments.
- *
- * Modified 1/22/97 by Paul McMahan mcmahan@cs.utk.edu Added more MacOS options
- * to form.
- *
- * Optimized by Jonathan Hardwick (jch@cs.cmu.edu), 3/28/96 Compare to
- * Linkpack.java. Optimizations performed: - added "final" modifier to
- * performance-critical methods. - changed lines of the form "a[i] = a[i] + x"
- * to "a[i] += x". - minimized array references using common subexpression
- * elimination. - eliminated unused variables. - undid an unrolled loop. -
- * added temporary 1D arrays to hold frequently-used columns of 2D arrays. -
- * wrote my own abs() method See http://www.cs.cmu.edu/~jch/java/linpack.html
- * for more details.
- *
- *
- * Ported to Java by Reed Wade (wade@cs.utk.edu) 2/96 built using JDK 1.0 on
- * solaris using "javac -O Linpack.java"
- *
- *
- * Translated to C by Bonnie Toy 5/88 (modified on 2/25/94 to fix a problem
- * with daxpy for unequal increments or equal increments not equal to 1. Jack
- * Dongarra)
- *
- */
 
 public class Linpack {
 
-    public static void main(String[] args) {
+    public static void main() {
         run_benchmark();
     }
 
@@ -57,7 +26,11 @@ public class Linpack {
         double time_result = 0.0;
         double eps_result = 0.0;
 
-        double a[][] = new double[200][201];
+        //double a[][] = new double[200][201];
+        double a[][] = new double[200][];
+        for (int i = 0; i < 200; i++) a[i] = new double[201];
+
+
         double b[] = new double[200];
         double x[] = new double[200];
         double ops, total, norma, normx;
@@ -121,13 +94,13 @@ public class Linpack {
         mflops_result /= 1000;
 
         //System.out.print("Mflops/s: ");
-        System.out.println(mflops_result);
+        linux.glibc.put((int)mflops_result);
         //System.out.print("  Time: ");
-        System.out.println(time_result);
+        linux.glibc.put((int)time_result);
         //System.out.print(" secs   Norm Res: ");
-        System.out.println(residn_result);
+        //System.out.println(residn_result);
         //System.out.print("  Precision: ");
-        System.out.println(eps_result);
+        //System.out.println(eps_result);
     }
 
     static final double matgen(double a[][], final int n, double b[]) {

@@ -33,6 +33,7 @@ public class Test {
         linux.glibc.put(test.in);
 
         double v[] = new double[10000];
+        int ii[] = new int[123];
         for (int i = 0; i < 10000; i++) v[i] = i * 1.2d;
 
        // for (int i = 0; i < 10000; i++)
@@ -56,5 +57,10 @@ public class Test {
         linux.glibc.put(System.currentTimeMillis() - a);
 
         linux.glibc.put(sl);
+        linux.glibc.put(ii[6]);
+        linux.glibc.put(singleton.ln);
+
+
+        //double d[][] = new double[101][201];
     }
 }

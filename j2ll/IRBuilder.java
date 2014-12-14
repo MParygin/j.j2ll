@@ -4,6 +4,7 @@ import org.objectweb.asm.Label;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SplittableRandom;
 import java.util.Stack;
 
 /**
@@ -44,14 +45,15 @@ public class IRBuilder {
 
 
     public void _new(_Stack stack, Resolver resolver, String name) {
-        String struc = resolver.resolveStruct(name);
+        // state
+        String struct = resolver.resolveStruct(name);
         String object = resolver.resolve(name);
         String res = stack.pushObjRef(object);
-
-        add("; " + resolver.resolveStruct(name));
-        add("%_" + tmp + " = call i8* @malloc(" + Internals.structSize(struc) + ")");
-        add(res + " = bitcast i8* %_" + tmp + " to " + object);
-        tmp++;
+        String reg = allocReg();
+        // out
+        comment(resolver.resolveStruct(name));
+        add(reg + " = call i8* @malloc(" + Internals.structSize(struct) + ")");
+        add(res + " = bitcast i8* " + reg + " to " + object);
     }
 
     public void neg(_Stack stack, String type) {
@@ -114,20 +116,22 @@ public class IRBuilder {
         }
     }
 
-    public void newArray(_Stack stack, String arrayType) {
-        StackValue op = stack.pop();
-        String res = stack.pushObjRef(arrayType);
+    // todo split primitive and objects
+    public void newArray(_Stack stack, Resolver resolver, String arrayType) {
+        comment("new array " + arrayType);
+        //arrayType = "[" + arrayType;
+        //StackValue op = stack.pop();
+        String ty = Util.javaSignature2irType(resolver, arrayType);
+        String res = stack.pushObjRef(ty);
+        String reg1 = allocReg();
+        String reg2 = allocReg();
+        String reg3 = allocReg();
         // size array in bytes
-        int bytes = Internals.sizeOf(Internals.LONG); //todo
-        if (bytes != 1) {
-            add("%_" + tmp + " = shl " + op.fullName() + ", " + bytes);
-            tmp++;
-        }
-        add("%_" + tmp + " = add i32 %_" + (tmp-1) + ", 4");
-        tmp++;
-        add("%_" + tmp + " = call i8* @malloc(i32 %_" + (tmp - 1) + ")");
-        add(res + " = bitcast i8* %_" + tmp + " to " + arrayType);
-        tmp++;
+        int bytes = Internals.sizeOf(res);
+        //todo dodo add(reg1 + " = mul " + op.fullName() + ", " + bytes);
+        add(reg2 + " = add i32 " + reg1 + ", 4");
+        add(reg3 + " = call i8* @malloc(i32 " + reg2 + ")");
+        add(res + " = bitcast i8* " + reg3 + " to " + arrayType);
     }
 
     public void putfield(_Stack stack, Resolver resolver, String className, String name, String signature) {
@@ -138,8 +142,7 @@ public class IRBuilder {
         String reg = allocReg();
         // out
         comment("putfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " := " + value.fullName() + " )");
-// todo *       getelementptr(reg, inst.getIR(), inst.toString(), 0, Util.class2ptr(className, name));
-        add(reg + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        getelementptr(reg, inst.fullName(), 0, Util.class2ptr(className, name));
         store(ty, value.toString(), reg);
     }
 
@@ -163,7 +166,7 @@ public class IRBuilder {
         String reg = allocReg();
         // out
         comment("getfield " + className + " " + name + " " + signature + " ( " + inst.fullName() + " )");
-        add(reg + " = getelementptr " + inst.fullName() + ", i32 0, i32 " + Util.class2ptr(className, name));
+        getelementptr(reg, inst.fullName(), 0, Util.class2ptr(className, name));
         load(result, ty, reg);
     }
 
@@ -178,37 +181,41 @@ public class IRBuilder {
         load(result, ty, reg);
     }
 
-
-
-
     public void astore(_Stack stack, String type) {
+        // state
         StackValue value = stack.pop();
         StackValue index = stack.pop();
-        StackValue arrayRef = stack.pop(); // todo
-        //add("%__tmp" + tmp + " = getelementptr " + arrayRef.fullName() + ", i32 0, i32 1, i32 " + index); // todo type index
-        add("%__tmp" + tmp + " = getelementptr " + arrayRef.fullName() + ", i32 0, i32 1, " + index.fullName());
-//        add("store i32 " + value + ", i32* %__tmp" + tmp);
-        add("store " + value.fullName() + ", " + type + "* %__tmp" + tmp);
-        tmp++;
+        StackValue arrayRef = stack.pop();
+        String reg = allocReg();
+        // out
+        comment("astore " + type);
+        getelementptr(reg, arrayRef.fullName(), 0, 1, index.fullName()); // pointer to element of array
+        store(type, value.toString(), reg);
     }
 
     public void aload(_Stack stack, String type) {
+        // state
         StackValue index = stack.pop();
         StackValue arrayRef = stack.pop();
         String value = stack.push(type);
-        add("%__tmp" + tmp + " = getelementptr " + arrayRef.fullName() + ", i32 0, i32 1, " + index.fullName());
-        add(value + " = load " + type + "* %__tmp" + tmp);
-        tmp++;
+        String reg = allocReg();
+        // out
+        comment("aload " + type);
+        getelementptr(reg, arrayRef.fullName(), 0, 1, index.fullName()); // pointer to element of array
+        load(value, type, reg);
     }
 
     public void aaload(_Stack stack) {
+        // state
         StackValue index = stack.pop();
         StackValue arrayRef = stack.pop();
-        String type = Internals.dearrayOf(arrayRef.getIR());
-        String value = stack.push(type);
-        add("%__tmp" + tmp + " = getelementptr " + arrayRef.fullName() + ", i32 0, i32 1, " + index.fullName());
-        add(value + " = load " + type + "* %__tmp" + tmp);
-        tmp++;
+        String ty = Internals.dearrayOf(arrayRef.getIR());
+        String value = stack.push(ty);
+        String reg = allocReg();
+        // out
+        comment("aload " + ty);
+        getelementptr(reg, arrayRef.fullName(), 0, 1, index.fullName()); // pointer to element of array
+        load(value, ty, reg);
     }
 
     public void fptosi(_Stack stack, String type) {
@@ -249,6 +256,26 @@ public class IRBuilder {
                 tmp.append(", i64 ");
             }
             tmp.append(id);
+        }
+        add(tmp.toString());
+    }
+
+    public void getelementptr(String result, String pointer, Object ... idx) {
+        StringBuilder tmp = new StringBuilder();
+        tmp.append(result);
+        tmp.append(" = getelementptr ");
+        tmp.append(pointer);
+        for (Object id : idx) {
+            tmp.append(", ");
+            if (id instanceof Integer) {
+                tmp.append("i32 ");
+                tmp.append(id);
+            } else if (id instanceof Long) {
+                tmp.append("i64 ");
+                tmp.append(id);
+            } else {
+                tmp.append(id);
+            }
         }
         add(tmp.toString());
     }

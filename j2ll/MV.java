@@ -500,7 +500,7 @@ public class MV extends MethodVisitor {
                 out.add("; push " + value);
                 break;
             case Opcodes.NEWARRAY: // 188
-                out.newArray(stack, Internals.newJVMArray(value));
+                out.newArray(stack, this.cv.getStatistics().getResolver(), Internals.newJVMArray(value));
                 break;
             default:
                 System.out.println("visitIntInsn " + opcode + " " + value);
@@ -539,7 +539,7 @@ public class MV extends MethodVisitor {
                     if (lv != null) {
                         String type = Util.javaSignature2irType(this.cv.getStatistics().getResolver(), lv.signature);
                         StackValue value = stack.pop();
-                        System.out.println(value.getIR());
+                        out.comment("*store "  + value.getIR());
                         out.add("store " + value.fullName() + ", " + type + "* %" + lv.name);
                     } else {
                         out.add("store " + stack.pop().fullName() + ", " + "i32" + "* %" + slot); // todo
@@ -558,7 +558,7 @@ public class MV extends MethodVisitor {
                 out._new(stack, this.cv.getStatistics().getResolver(), s);
                 break;
             case Opcodes.ANEWARRAY: // 189
-                out.add("a new array " + s);
+                out.newArray(stack, this.cv.getStatistics().getResolver(), s);
                 break;
             case Opcodes.CHECKCAST: // 192
                 out.add("checkcast " + s);
@@ -802,8 +802,18 @@ public class MV extends MethodVisitor {
     }
 
     @Override
-    public void visitMultiANewArrayInsn(String s, int i) {
-       out.add("visitMultiANewArrayInsn " + s + " " + i);
+    public void visitMultiANewArrayInsn(String s, int dims) {
+        if (dims == 2) {
+            StackValue size2 = stack.pop();
+            StackValue size1 = stack.pop();
+
+            out.comment("Multi Dimension Array: " + s + " " + dims);
+            out.comment(size1.fullName());
+            out.comment(size2.fullName());
+            //todo
+        } else {
+            out.add("visitMultiANewArrayInsn " + s + " " + dims);
+        }
     }
 
     @Override
